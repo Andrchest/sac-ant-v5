@@ -1,0 +1,8 @@
+.venv/
+.pi/
+.ipynb_checkpoints/
+artifacts/
+__pycache__/
+.pytest_cache/
+.env
+.env.*

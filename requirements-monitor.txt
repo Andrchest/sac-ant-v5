@@ -1,0 +1,4 @@
+# Add to the experiment's existing Python environment; does not replace PyTorch.
+rich>=13.7,<15
+tensorboard>=2.16,<3
+pytest>=8,<9
