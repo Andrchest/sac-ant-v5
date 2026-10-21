@@ -69,6 +69,7 @@ def test_standing_is_not_a_success_even_with_survival_reward():
     assert not assess_rows(rows)['sufficient']
     rows = [dict(return_='3500', x_progress='100', length='1000', terminated='False')] * 10
     assert assess_rows(rows)['sufficient']
+    assert '30 episodes' in assess_rows(rows * 3)['note']
 
 
 def test_short_or_nonfinite_evaluation_is_rejected():

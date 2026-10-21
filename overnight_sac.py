@@ -33,7 +33,7 @@ def assess_rows(rows):
                   and means['length'] >= 900 and fall_rate <= 0.2)
     return dict(mean_return=means['return_'], mean_x_progress=means['x_progress'],
                 mean_length=means['length'], fall_rate=fall_rate, sufficient=sufficient,
-                note='Operational gait heuristic on 10 episodes, not a statistical benchmark claim.')
+                note=f'Operational gait heuristic on {len(rows)} episodes, not a statistical benchmark claim.')
 
 
 def extension_budget(total_steps, available_seconds, steps_per_second):
