@@ -102,10 +102,38 @@ Supervisor сначала запускает **1 млн шагов**. После
 
 Можно также передать `.../checkpoints/step_N/model.zip`, если рядом есть полный `replay_buffer.pkl`. Smoke-модель как full не принимается. Продолжение не сбрасывает глобальный счётчик шагов, а ETA и скорость учитывают только новую порцию.
 
+## Кампания харденинга (мульти-сид, абляции, бейзлайны)
+
+Отдельные скрипты для воспроизводимых экспериментов (окружение/награда/оценка —
+идентичны ноутбуку, обучение идёт в отдельном процессе, параллельно):
+
+- `run_experiment.py` — один эксперимент (SAC/PPO/TD3, свои гиперпараметры/шаги/сид).
+- `campaign_experiments.py` — определения экспериментов (база + абляции + бейзлайны).
+- `ablation_campaign.py` — оркестратор с приоритетами, N воркерами и дедлайном.
+- `campaign_analysis.py` — сводка результатов кампании в markdown-таблицы.
+- `campaign_plots.py` — графики (сиды, сходимость, абляции, бейзлайны).
+- `make_slide.py` — готовый слайд результатов (16:9) для презентации.
+
+Запуск кампании (пример; ~16 ч на 12 ядрах, все 10 экспериментов):
+
+```bash
+.venv/bin/python -u ablation_campaign.py --workers 3 --threads 4 \
+  --deadline 2026-11-13T07:00:00+03:00 --baseline-seconds-per-million 6500 \
+  --output artifacts/campaign
+```
+
+Результаты: `artifacts/campaign/campaign_summary.json`, `campaign_report.md`,
+`analysis.md`. Ключевые выводы — в `artifacts/night_*/report.md` (секция Hardening)
+и на странице результатов (`#hardening`). GPU не ускоряет задачу: бутлнек в физике
+MuJoCo, CPU и CUDA дают примерно одинаковую скорость. Честные цифры: 5701 — это верх
+сид-диапазона 2571–5701 (среднее ≈3853); 1М шагов — плато; SAC > TD3 > PPO.
+
 ## Проверки
 
 ```bash
 .venv/bin/python -m pytest tests -q
 .venv/bin/python train_sac.py --help
 .venv/bin/python watch_sac.py --help
+.venv/bin/python -m py_compile run_experiment.py campaign_experiments.py \
+  ablation_campaign.py campaign_analysis.py campaign_plots.py make_slide.py
 ```
