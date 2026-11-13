@@ -115,6 +115,8 @@ Supervisor сначала запускает **1 млн шагов**. После
 - `best_config_campaign.sh` — запуск best config (3 сида параллельно).
 - `best_config_plots.py` — графики сравнения best config и базы.
 - `make_rollout.py` — запись rollout MP4 из checkpoint (только инференс).
+- `best_vs_base_stats.py` — bootstrap-ЦИ, Mann-Whitney U, Cohen's d для best vs base.
+- `stochastic_eval.py` — стохастическая (temperature) оценка robustness модели.
 - `make_slide.py` — готовый слайд результатов (16:9) для презентации.
 
 Запуск кампании (пример; ~16 ч на 12 ядрах, все 10 экспериментов):
@@ -155,5 +157,5 @@ MuJoCo, CPU и CUDA дают примерно одинаковую скорос�
 .venv/bin/python watch_sac.py --help
 .venv/bin/python -m py_compile run_experiment.py campaign_experiments.py \
   ablation_campaign.py campaign_analysis.py campaign_plots.py best_config_plots.py \
-  make_rollout.py make_slide.py
+  make_rollout.py best_vs_base_stats.py stochastic_eval.py make_slide.py
 ```
