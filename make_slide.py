@@ -28,15 +28,20 @@ def ax_style(a):
     for s in a.spines.values(): s.set_color('#2c4363')
     a.grid(color='#22344e', alpha=0.6)
 
-# 1. seeds
+# 1. best vs base
 a1 = fig.add_subplot(gs[0, 0])
-seeds = ['42', '43', '44']; vals = [5701, 3286, 2571]; errs = [157, 904, 1108]
-b = a1.bar(seeds, vals, yerr=errs, capsize=5, color='#4f9cf7', alpha=0.9)
-a1.set_title('Разброс по сидам (1М)', fontsize=13)
+x = [0, 1, 2]; bw = 0.38
+base_v = [5701, 3286, 2571]; base_e = [157, 904, 1108]
+best_v = [5818, 5362, 5023]; best_e = [148, 701, 1256]
+a1.bar([i-bw/2 for i in x], base_v, yerr=base_e, capsize=4, width=bw, color='#8aa0bd', alpha=0.85, label='base (lr 3e-4)')
+a1.bar([i+bw/2 for i in x], best_v, yerr=best_e, capsize=4, width=bw, color='#4f9cf7', alpha=0.9, label='best (lr 1e-3)')
+a1.set_xticks(x); a1.set_xticklabels(['run 1', 'run 2', 'run 3'], fontsize=9)
+a1.set_title('Best config vs base (1М)', fontsize=13)
 a1.set_ylabel('награда')
-for x, v in zip(b, vals):
-    a1.annotate(f'{v:.0f}', (x.get_x()+x.get_width()/2, v), textcoords='offset points',
-                xytext=(0, 6), ha='center', color='#eef4ff', fontsize=9)
+a1.legend(fontsize=8)
+for i in x:
+    a1.annotate(f'{base_v[i]:.0f}', (i-bw/2, base_v[i]), textcoords='offset points', xytext=(0, 5), ha='center', color='#eef4ff', fontsize=8)
+    a1.annotate(f'{best_v[i]:.0f}', (i+bw/2, best_v[i]), textcoords='offset points', xytext=(0, 5), ha='center', color='#eef4ff', fontsize=8)
 ax_style(a1)
 
 # 2. convergence
@@ -79,8 +84,8 @@ ax_style(a4)
 
 # bottom line
 fig.text(0.05, 0.015,
-         'Вывод: SAC лучший из 3 алгоритмов · 5701 = верх сид-диапазона 2571–5701 (ср. ≈3853) · 1М шагов — плато · '
-         'помогают lr=1e-3 и сеть ≥128',
+         'Вывод: SAC лучший из 3 алгоритмов · best config (lr 1e-3, batch 128): ср. 5401, диапазон 5023–5818, 0–3% падений '
+         '(против 3853 / 2571–5701 / 0–50% у базы) · hero = seed 50 (5818) · 1М шагов — плато',
          color='#c3d6ee', fontsize=11)
 
 fig.savefig(OUT)

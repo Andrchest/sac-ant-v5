@@ -112,6 +112,9 @@ Supervisor сначала запускает **1 млн шагов**. После
 - `ablation_campaign.py` — оркестратор с приоритетами, N воркерами и дедлайном.
 - `campaign_analysis.py` — сводка результатов кампании в markdown-таблицы.
 - `campaign_plots.py` — графики (сиды, сходимость, абляции, бейзлайны).
+- `best_config_campaign.sh` — запуск best config (3 сида параллельно).
+- `best_config_plots.py` — графики сравнения best config и базы.
+- `make_rollout.py` — запись rollout MP4 из checkpoint (только инференс).
 - `make_slide.py` — готовый слайд результатов (16:9) для презентации.
 
 Запуск кампании (пример; ~16 ч на 12 ядрах, все 10 экспериментов):
@@ -128,6 +131,22 @@ Supervisor сначала запускает **1 млн шагов**. После
 MuJoCo, CPU и CUDA дают примерно одинаковую скорость. Честные цифры: 5701 — это верх
 сид-диапазона 2571–5701 (среднее ≈3853); 1М шагов — плато; SAC > TD3 > PPO.
 
+## Best-config агент (2026-11-13)
+
+Применив рычаги из абляций — **сеть 256, lr=1e-3, batch=128, 1М шагов** — обучили 3
+новых сида (50/51/52) через `best_config_campaign.sh`:
+
+| сид | награда | ст. откл. | падения |
+|---|---|---|---|
+| **50 (hero)** | **5818** | 148 | 0% |
+| 51 | 5362 | 701 | 3% |
+| 52 | 5023 | 1256 | 3% |
+
+Среднее **5401**, диапазон **5023–5818**, разброс **794** — против 3853 / 2571–5701 / 3130
+у исходной конфигурации. Худший сид новой конфигурации (5023) выше среднего старой (3853),
+падения 0–3% против 0–50%. **Hero-модель — seed 50**; она по умолчанию в `demo_policy.py`
+и в бандле. Графики: `best_config_plots.py`; видео: `make_rollout.py`.
+
 ## Проверки
 
 ```bash
@@ -135,5 +154,6 @@ MuJoCo, CPU и CUDA дают примерно одинаковую скорос�
 .venv/bin/python train_sac.py --help
 .venv/bin/python watch_sac.py --help
 .venv/bin/python -m py_compile run_experiment.py campaign_experiments.py \
-  ablation_campaign.py campaign_analysis.py campaign_plots.py make_slide.py
+  ablation_campaign.py campaign_analysis.py campaign_plots.py best_config_plots.py \
+  make_rollout.py make_slide.py
 ```
