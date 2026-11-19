@@ -26,7 +26,7 @@ for name in ['.gitignore', 'README.md', 'requirements-monitor.txt', 'sac_ant_v5.
              'sac_monitor.py', 'train_sac.py', 'watch_sac.py', 'training_control.py',
              'overnight_sac.py', 'tests/test_monitor.py', 'tests/test_overnight.py',
              'tests/test_campaign_regressions.py', 'tests/test_followup_campaign.py',
-             'EXPERIMENT_PROTOCOL.md', 'followup_campaign.py',
+             'tests/test_followup_analysis.py', 'EXPERIMENT_PROTOCOL.md', 'followup_campaign.py', 'followup_analysis.py',
              'run_experiment.py', 'campaign_experiments.py', 'ablation_campaign.py',
              'campaign_analysis.py', 'campaign_plots.py', 'best_config_plots.py',
              'best_vs_base_stats.py', 'stochastic_eval.py', 'compare_hero_checkpoints.py', 'make_slide.py']:
@@ -46,7 +46,7 @@ include(RUN / 'best_config/seed_50/eval/evaluations.npz', f'artifacts/{RUN.name}
 for path in sorted((RUN / 'tensorboard').rglob('events.out.tfevents.*')):
     include(path, f'artifacts/{RUN.name}/{path.relative_to(RUN).as_posix()}')
 for name in ['seeds.png', 'convergence.png', 'ablation.png', 'baselines.png',
-             'best_config.png', 'best_vs_base.png', 'results_slide.png']:
+             'best_config.png', 'best_vs_base.png', 'results_slide.png', 'followup.png']:
     include(RUN / 'hardening' / name, f'artifacts/{RUN.name}/hardening/{name}')
 # Include small primary data, not checkpoints or replay buffers. Rewrite the
 # campaign index so analysis works from the extracted bundle's project root.
@@ -67,6 +67,9 @@ for seed in (50, 51, 52):
     include(matches[0].parent / 'summary.json', f'artifacts/campaign/best/seed_{seed}/summary.json')
 for name in ('hero_checkpoint_comparison.csv', 'hero_checkpoint_comparison.json'):
     include(ROOT / 'artifacts/campaign' / name, f'artifacts/campaign/{name}')
+for path in sorted((ROOT / 'research/followup').rglob('*')):
+    if path.is_file():
+        include(path, path.relative_to(ROOT).as_posix())
 include(ROOT / 'artifacts/campaign/analysis.md', 'HARDENING_ANALYSIS.md')
 night = Path(json.loads((ROOT / 'artifacts/night_latest.json').read_text())['directory'])
 include(night / 'report.md', 'OVERNIGHT_REPORT.md')
@@ -163,6 +166,16 @@ included; their aggregate is in `hero_summary.json`. A later paired evaluation o
 models on 30 new reset seeds is included in `artifacts/campaign/hero_checkpoint_comparison.csv`.
 Zero observed falls does not establish zero fall probability. See `HARDENING_ANALYSIS.md`,
 `OVERNIGHT_REPORT.md` (section 5), and `hardening/best_*.png`.
+
+## Preregistered follow-up (2026-11-19/20)
+
+On three paired training seeds (60/61/62) at 1M environment steps, mean evaluation
+returns across trained seeds were SAC 4012, TD3 3309 and PPO 948. TD3 used normal
+exploration noise σ=0.1. These are descriptive results for specific configurations;
+three training seeds and one environment do not establish general superiority.
+The single-seed 500k SAC base control scored 1584 ± 1183 (7/10 falls). Full protocol,
+per-episode CSVs, provenance and training-seed analysis are in `EXPERIMENT_PROTOCOL.md`
+and `research/followup/`; see `OVERNIGHT_REPORT.md` section 7.
 '''.encode()
 
 files['demo_policy.py'] = f'''"""Run the downloaded SAC checkpoint without training or replay-buffer allocation."""

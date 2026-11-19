@@ -1,0 +1,45 @@
+{
+  "status_sha256": "bc10047453fb1c03b159778969f67230c19e155cfa78515d4213f3570be631f7",
+  "sources": {
+    "sac_60": {
+      "summary.json": "ec01ab562f5ec7f2a911e1fbebb478fbddfeec36202ee7b54bbee35fb2064bce",
+      "evaluation_all.csv": "5cb9a03dac7503a0e1c4314de9e98822bd4aece7fa879c27918f425b20f14281"
+    },
+    "sac_61": {
+      "summary.json": "4d2bf9f8c3d7077bac1fc57aaccadbba32020f1c67708be1a17a53b00a685856",
+      "evaluation_all.csv": "d43cccbeaf6c41795f60fb6f92fd225fe496251061251f7f5e3979b063fd7c8a"
+    },
+    "sac_62": {
+      "summary.json": "3e118b5b601424258af23f7be495f697c0b7dcf409577178918f136a6e0a5eac",
+      "evaluation_all.csv": "fe6e81b58acd8f4302d715a6364d0e36c658b12d7467f6604e12eed8de5e1f25"
+    },
+    "td3_60": {
+      "summary.json": "f19f4a8ff2ee13d6de960cb307c12132a40bd8d0fa85e913e2bbfc6107dc928b",
+      "evaluation_all.csv": "b4d4672cf34e7b03613cd19574b1de4800175d5a26607a9b8ee89eab041cd4a3"
+    },
+    "td3_61": {
+      "summary.json": "a276fb6e55fb53a312ada88dec9f1a4c3a8e7a37ffbb23cc641dd37a34393b35",
+      "evaluation_all.csv": "51bdb46c453a783d4d947543221e7e45121a667acdce7bc773705d12a8d63815"
+    },
+    "td3_62": {
+      "summary.json": "04df218540f12cc02aeec08506012bd5fa06378d7eac56bc657eca79c35d931f",
+      "evaluation_all.csv": "957afb8ea9ffc6d2d2c26de4f859a33af360cc8126a3a80f3a72b4c75fdd926f"
+    },
+    "ppo_60": {
+      "summary.json": "4f0b73f01d5fa0ffc33279e046529e6b565571163cdf75d61a7dd438feee7441",
+      "evaluation_all.csv": "f00a4ecb4f0b250eda17013f73215ba91c85bedcf42cefa8fc31ed9cde279064"
+    },
+    "ppo_61": {
+      "summary.json": "72cf3040f32d28a03ac3a689ee303fbf90d6ecfedb7dfe135321efbb1caae639",
+      "evaluation_all.csv": "acd186c493c06957dcac889bce3314dcd6915d0c2492afbee19ed12e5d8268a6"
+    },
+    "ppo_62": {
+      "summary.json": "8eb634b36f85223efa02e323e58461d56c7ab723aea58c660507ac196329dd40",
+      "evaluation_all.csv": "8bbddafe7169a335da90dc5ffc62ec90b7d5f0be65508bd05ed8e75cdda40ddf"
+    },
+    "sac_control_42_500k": {
+      "summary.json": "59ae75569778fe66c840ce2d9b33ccde2fa566767b7989e3b535fa646c85f226",
+      "evaluation_all.csv": "d3a3108f8185fdf60c31845a7f4809f4f6adc91ca2e63d7eacb249afde4eb611"
+    }
+  }
+}

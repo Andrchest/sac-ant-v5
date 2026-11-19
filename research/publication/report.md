@@ -120,3 +120,17 @@ Paired held-out inference on reset seeds 920000–920029: checkpoint **5854.15 �
 5. **Asymmetric eval sizes.** The original seed-42 run used 10 final episodes; later runs used 30.
 6. **Single environment.** All results are Ant-v5 only; no cross-environment robustness is claimed.
 7. **Operational, not inferential.** With these sample sizes the statistics describe the observed runs; they are not population-level significance tests.
+
+### 7. Preregistered follow-up (2026-11-19/20)
+
+Nine independent 1M-step training runs used paired seeds 60/61/62, 30 deterministic reset episodes per run, fixed configurations and TD3 Gaussian exploration noise σ=0.1. Mean episode return by training seed:
+
+| Algorithm | seed 60 | seed 61 | seed 62 | Mean of 3 |
+|---|---:|---:|---:|---:|
+| SAC | 3366.9 | 4243.5 | 4426.9 | 4012.4 |
+| TD3 | 3367.8 | 3514.2 | 3044.1 | 3308.7 |
+| PPO | 1087.8 | 948.0 | 809.2 | 948.3 |
+
+SAC–TD3 paired differences are approximately −1.0, +729.3 and +1382.8. These are descriptive observations for three training seeds and one environment; no general superiority claim, pooled episode p-value or equal-compute claim is made. Equal budget means environment steps. Reset sets overlap across training seeds. See `research/followup/analysis.md`, per-run CSV and `EXPERIMENT_PROTOCOL.md`.
+
+The separate SAC base control on seed 42 / 500k under the 500k ablations' final-evaluation protocol yielded **1584.4 ± 1183.2**, 7/10 falls. It is a single-seed exploratory comparison, not a general causal conclusion.
