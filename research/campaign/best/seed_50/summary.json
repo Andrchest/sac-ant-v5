@@ -1,0 +1,65 @@
+{
+  "status": "done",
+  "algo": "sac",
+  "seed": 50,
+  "steps": 1000000,
+  "gradient_updates": 990000,
+  "train_seconds": 9873.5,
+  "budget_completed": true,
+  "random_return_mean": -42.46512368881743,
+  "initial_return_mean": 989.4526062053963,
+  "final_return_mean": 5817.675932840351,
+  "final_return_std": 147.58718290480792,
+  "final_x_progress_mean": 282.4621202086658,
+  "final_length_mean": 1000.0,
+  "final_fall_rate": 0.0,
+  "eval_episodes": 30,
+  "checkpoints": [
+    {
+      "step": 500000,
+      "return_mean": 5012.787780093866,
+      "return_std": 169.36236074420296,
+      "x_progress_mean": 246.9187664509313,
+      "fall_rate": 0.1
+    },
+    {
+      "step": 1000000,
+      "return_mean": 5278.552570651178,
+      "return_std": 1601.250937259745,
+      "x_progress_mean": 256.56695205256653,
+      "fall_rate": 0.2
+    }
+  ],
+  "run_dir": "/home/andreipc/Inno-RL/artifacts/xp_sac_50_20261113T090656861658Z_best50",
+  "config": {
+    "algo": "sac",
+    "seed": 50,
+    "steps": 1000000,
+    "net": [
+      256,
+      256
+    ],
+    "lr": 0.001,
+    "batch": 128,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "ent_coef": "auto",
+    "learning_starts": 10000,
+    "ppo_n_steps": 2048,
+    "eval_episodes": 30,
+    "checkpoint_every": 500000,
+    "threads": 4,
+    "versions": {
+      "gymnasium": "1.2.1",
+      "mujoco": "3.3.7",
+      "stable-baselines3": "2.7.0",
+      "torch": "2.5.1",
+      "numpy": "2.2.6",
+      "pandas": "2.3.3"
+    },
+    "python": "3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]",
+    "executable": "/home/andreipc/Inno-RL/.venv/bin/python",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+    "run_id": "20261113T090656861658Z"
+  }
+}

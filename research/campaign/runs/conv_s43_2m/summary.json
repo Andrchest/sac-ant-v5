@@ -1,0 +1,107 @@
+{
+  "status": "done",
+  "algo": "sac",
+  "seed": 43,
+  "steps": 2000000,
+  "gradient_updates": 1990000,
+  "train_seconds": 23945.3,
+  "budget_completed": true,
+  "random_return_mean": -66.58530438609569,
+  "initial_return_mean": 986.5148446260015,
+  "final_return_mean": 3127.424262899641,
+  "final_return_std": 1720.5420659125823,
+  "final_x_progress_mean": 164.24719106894378,
+  "final_length_mean": 713.9666666666667,
+  "final_fall_rate": 0.5,
+  "eval_episodes": 30,
+  "checkpoints": [
+    {
+      "step": 250000,
+      "return_mean": 1068.1644997955527,
+      "return_std": 835.2716229602418,
+      "x_progress_mean": 48.863889572280684,
+      "fall_rate": 0.6
+    },
+    {
+      "step": 500000,
+      "return_mean": 2323.5154550255875,
+      "return_std": 866.0065193500354,
+      "x_progress_mean": 116.26492788471096,
+      "fall_rate": 0.5
+    },
+    {
+      "step": 750000,
+      "return_mean": 3347.680863410408,
+      "return_std": 294.1488030909429,
+      "x_progress_mean": 171.58734465349036,
+      "fall_rate": 0.1
+    },
+    {
+      "step": 1000000,
+      "return_mean": 3286.1390567880417,
+      "return_std": 903.7288216187956,
+      "x_progress_mean": 170.5589830662966,
+      "fall_rate": 0.5
+    },
+    {
+      "step": 1250000,
+      "return_mean": 2011.0464391093185,
+      "return_std": 1497.8148683790666,
+      "x_progress_mean": 96.98774226226642,
+      "fall_rate": 0.5
+    },
+    {
+      "step": 1500000,
+      "return_mean": 2974.175394710755,
+      "return_std": 1479.6313636136972,
+      "x_progress_mean": 150.92204752863668,
+      "fall_rate": 0.4
+    },
+    {
+      "step": 1750000,
+      "return_mean": 2314.776255025484,
+      "return_std": 1479.8682066302904,
+      "x_progress_mean": 116.7287811380127,
+      "fall_rate": 0.5
+    },
+    {
+      "step": 2000000,
+      "return_mean": 3393.911353951497,
+      "return_std": 1416.3475158519602,
+      "x_progress_mean": 177.4690884647922,
+      "fall_rate": 0.7
+    }
+  ],
+  "run_dir": "/home/andreipc/Inno-RL/artifacts/xp_sac_43_20261112T151715757554Z_conv",
+  "config": {
+    "algo": "sac",
+    "seed": 43,
+    "steps": 2000000,
+    "net": [
+      256,
+      256
+    ],
+    "lr": 0.0003,
+    "batch": 256,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "ent_coef": "auto",
+    "learning_starts": 10000,
+    "ppo_n_steps": 2048,
+    "eval_episodes": 30,
+    "checkpoint_every": 250000,
+    "threads": 4,
+    "versions": {
+      "gymnasium": "1.2.1",
+      "mujoco": "3.3.7",
+      "stable-baselines3": "2.7.0",
+      "torch": "2.5.1",
+      "numpy": "2.2.6",
+      "pandas": "2.3.3"
+    },
+    "python": "3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]",
+    "executable": "/home/andreipc/Inno-RL/.venv/bin/python",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+    "run_id": "20261112T151715757554Z"
+  }
+}

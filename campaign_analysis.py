@@ -3,7 +3,7 @@
 
 Reads every experiment summary.json (plus the pre-existing reference run) and
 produces:
-  - cross-seed statistics at 1M steps (mean, std, 95% CI, per-seed table)
+  - descriptive cross-seed statistics at 1M steps (per-seed table and range)
   - convergence curve (from the conv run's checkpoint evaluations)
   - one-factor-at-a-time ablation table (500k budget)
   - baseline comparison (SAC vs PPO vs TD3 at 1M)
@@ -34,31 +34,76 @@ def _ci95(values):
     return m - half, m + half
 
 
+REQUIRED_EXPERIMENT_IDS = frozenset({
+    'conv_s43_2m', 'seed44_1m', 'net128', 'net64', 'lr1e4', 'lr1e3',
+    'batch128', 'batch512', 'ppo_1m', 'td3_1m',
+})
+REQUIRED_CHECKPOINT_STEPS = frozenset(range(250_000, 2_000_001, 250_000))
+
+
+def _validate_complete(exps):
+    """Refuse to generate a full report from incomplete or invalid inputs."""
+    ids = [s.get('xp_id') for s in exps]
+    if len(ids) != len(set(ids)):
+        raise ValueError('Duplicate experiment IDs in campaign index')
+    missing = REQUIRED_EXPERIMENT_IDS - set(ids)
+    if missing:
+        raise ValueError(f'Missing required experiments: {", ".join(sorted(missing))}')
+    by_id = {s['xp_id']: s for s in exps}
+    metrics = ('final_return_mean', 'final_return_std', 'final_x_progress_mean',
+               'final_fall_rate', 'eval_episodes')
+    for xp_id in sorted(REQUIRED_EXPERIMENT_IDS):
+        s = by_id[xp_id]
+        if s.get('xp_status') != 'done' or s.get('status') != 'done':
+            raise ValueError(f'Experiment {xp_id} is not completed')
+        for key in metrics:
+            value = s.get(key)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(f'Invalid {key} for {xp_id}: {value!r}')
+        if s['eval_episodes'] <= 0 or not 0 <= s['final_fall_rate'] <= 1 or s['final_return_std'] < 0:
+            raise ValueError(f'Invalid evaluation metrics for {xp_id}')
+    checkpoints = by_id['conv_s43_2m'].get('checkpoints')
+    if not isinstance(checkpoints, list) or any(not isinstance(c, dict) for c in checkpoints):
+        raise ValueError('Invalid convergence checkpoints')
+    steps = [c.get('step') for c in checkpoints]
+    if len(steps) != len(REQUIRED_CHECKPOINT_STEPS) or set(steps) != REQUIRED_CHECKPOINT_STEPS:
+        raise ValueError('Missing, duplicate or unexpected convergence checkpoints')
+    for c in checkpoints:
+        for key in ('return_mean', 'return_std', 'x_progress_mean', 'fall_rate'):
+            value = c.get(key)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(f'Invalid checkpoint {key} at {c["step"]}: {value!r}')
+        if c['return_std'] < 0 or not 0 <= c['fall_rate'] <= 1:
+            raise ValueError(f'Invalid checkpoint metrics at {c["step"]}')
+
+
 def _load_campaign(campaign_dir: Path):
     """Load each completed experiment's summary.json via campaign_summary.json run_dir."""
     exps = []
     cs = campaign_dir / 'campaign_summary.json'
+    if not cs.is_file():
+        raise FileNotFoundError(f'Missing required campaign index: {cs}')
     if cs.exists():
         meta = json.loads(cs.read_text())
         for e in meta.get('experiments', []):
             rd = e.get('run_dir')
             if not rd:
+                if e.get('status') == 'done':
+                    raise FileNotFoundError(f'Missing run_dir for completed experiment: {e.get("id")}')
                 continue
             sp = Path(rd) / 'summary.json'
+            if not sp.is_file():
+                raise FileNotFoundError(f'Missing experiment summary: {sp}')
             if sp.exists():
                 try:
                     s = json.loads(sp.read_text())
                     s['xp_id'] = e.get('id')
+                    s['xp_status'] = e.get('status')
                     exps.append(s)
-                except Exception:
-                    pass
-    # fallback: glob top-level artifacts/xp_*
+                except (OSError, ValueError) as exc:
+                    raise ValueError(f'Invalid experiment summary: {sp}') from exc
     if not exps:
-        for sp in sorted(Path('artifacts').glob('xp_*/summary.json')):
-            try:
-                exps.append(json.loads(sp.read_text()))
-            except Exception:
-                continue
+        raise ValueError(f'No completed experiment summaries in {cs}')
     return exps
 
 
@@ -76,6 +121,7 @@ def main():
     args = ap.parse_args()
     cdir = Path(args.campaign)
     exps = _load_campaign(cdir)
+    _validate_complete(exps)
 
     # --- Reference (pre-existing seed42 1M run) -----------------------------
     REF = dict(seed=42, steps=1_000_000, mean=5701.04, std=157.17, x=286.39,
@@ -169,7 +215,7 @@ def main():
 
     md = '\n'.join(L)
     if args.out:
-        Path(args.out).write_text(md)
+        Path(args.out).write_text(md, encoding='utf-8')
         print(f'wrote {args.out}')
     print(md)
 

@@ -28,6 +28,7 @@ import torch
 import gymnasium as gym
 from stable_baselines3 import SAC, PPO, TD3
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.callbacks import BaseCallback, EvalCallback, CallbackList
 
 ENV_ID = 'Ant-v5'
@@ -131,9 +132,13 @@ def build_policy(algo, env, a):
                    ent_coef=a.ent_coef, train_freq=1, gradient_steps=1,
                    policy_kwargs=net, **common)
     if algo == 'td3':
+        noise_std = getattr(a, 'action_noise_std', 0.0)
+        noise = (NormalActionNoise(mean=np.zeros(env.action_space.shape),
+                                   sigma=np.full(env.action_space.shape, noise_std))
+                 if noise_std > 0 else None)
         return TD3('MlpPolicy', env, buffer_size=min(1_000_000, a.steps),
                    learning_starts=a.learning_starts, batch_size=a.batch, tau=a.tau,
-                   policy_kwargs=net, **common)
+                   action_noise=noise, policy_kwargs=net, **common)
     if algo == 'ppo':
         return PPO('MlpPolicy', env, batch_size=a.batch, n_steps=a.ppo_n_steps,
                    ent_coef=0.0, policy_kwargs=net, **common)
@@ -153,6 +158,8 @@ def main():
     p.add_argument('--ent-coef', default='auto',
                    help="SAC entropy coefficient: 'auto' or a float, e.g. 0.2")
     p.add_argument('--learning-starts', type=int, default=10_000)
+    p.add_argument('--action-noise-std', type=float, default=0.0,
+                   help='TD3 normal exploration noise standard deviation (0 disables)')
     p.add_argument('--ppo-n-steps', type=int, default=2048)
     p.add_argument('--eval-episodes', type=int, default=10)
     p.add_argument('--checkpoint-every', type=int, default=0,
@@ -165,6 +172,10 @@ def main():
                    help='also save the (large) replay buffer')
     args = p.parse_args()
 
+    if not np.isfinite(args.action_noise_std) or args.action_noise_std < 0:
+        p.error('--action-noise-std must be finite and non-negative')
+    if args.algo != 'td3' and args.action_noise_std != 0:
+        p.error('--action-noise-std applies only to TD3')
     torch.set_num_threads(args.threads)
     assert args.steps > args.learning_starts, 'steps must exceed learning_starts'
     ent_coef = 'auto' if args.ent_coef == 'auto' else float(args.ent_coef)
@@ -182,6 +193,7 @@ def main():
     config = dict(algo=args.algo, seed=args.seed, steps=args.steps,
                   net=parse_net(args.net), lr=args.lr, batch=args.batch, gamma=args.gamma,
                   tau=args.tau, ent_coef=ent_coef, learning_starts=args.learning_starts,
+                  action_noise_std=args.action_noise_std if args.algo == 'td3' else None,
                   ppo_n_steps=args.ppo_n_steps, eval_episodes=args.eval_episodes,
                   checkpoint_every=args.checkpoint_every, threads=args.threads,
                   versions=versions, python=sys.version, executable=sys.executable,

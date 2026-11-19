@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -82,6 +83,7 @@ def main(argv=None):
     notebook_path = ROOT / 'sac_ant_v5.ipynb'
     notebook = json.loads(notebook_path.read_text(encoding='utf-8'))
     namespace = {'__name__': '__sac_experiment__', 'DASHBOARD': None,
+        'DEADLINE_REACHED': lambda: args.stop_at is not None and time.time() >= args.stop_at,
         'TRAINING_CONTROL_FACTORY': lambda model, seed_dir: TrainingControl(
             seed_dir, args.stop_at, args.checkpoint_every)}
     dashboard = None
@@ -112,9 +114,11 @@ def main(argv=None):
                 namespace['display'] = lambda value: print(
                     value.to_string() if hasattr(value, 'to_string') else str(value), flush=True)
                 namespace['plt'].show = lambda: namespace['plt'].close('all')
+        complete = namespace.get('SUMMARY', {}).get('budget_completed', True)
         if dashboard:
-            dashboard.finish('completed')
-        print('PASS — background experiment completed.', flush=True)
+            dashboard.finish('completed' if complete else 'partial')
+        print('PASS — background experiment completed.' if complete else
+              'PARTIAL — deadline stopped training; partial artifacts saved.', flush=True)
         return 0
     except KeyboardInterrupt:
         save_emergency(namespace)

@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "mode": "full",
+  "runs": [
+    {
+      "seed": 42,
+      "train_episodes": 1309,
+      "train_timesteps": 1000000,
+      "gradient_updates": 990000,
+      "initial_timesteps": 0,
+      "session_timesteps": 1000000,
+      "session_updates": 990000,
+      "budget_completed": true,
+      "stop_reason": null,
+      "actor_weight_l2_change": 107.86717987060547,
+      "train_seconds": 9429.57550562505,
+      "replay_size": 1000000,
+      "periodic_evaluations": 20,
+      "random_return_mean": -62.05134635210602,
+      "initial_return_mean": 961.9079002944097,
+      "final_return_mean": 5701.037002504314,
+      "checkpoint_reload_ok": true,
+      "replay_reload_ok": true
+    }
+  ],
+  "videos": [
+    "/home/andreipc/Inno-RL/artifacts/ant_sac_full_20261021T194131399885Z/seed_42/rollout.mp4"
+  ],
+  "budget_completed": true,
+  "note": "Smoke verifies optimization and pipeline, not convergence or statistically significant improvement."
+}

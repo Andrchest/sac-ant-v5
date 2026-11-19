@@ -59,10 +59,8 @@ for name, s in abl:
 fig, ax = plt.subplots(figsize=(7, 4.5))
 colors = ['#dc2626' if v < 1500 else ('#16a34a' if v > 3500 else '#2563eb') for v in vals]
 bars = ax.bar(labels, vals, yerr=errs, capsize=5, color=colors, alpha=0.85)
-ax.axhline(REF / 2, color='#6b7280', ls=':', lw=1, label='~half of 1M ref')
 ax.set_ylabel('Eval return (10 eps, 500k steps)')
 ax.set_title('Hyperparameter ablation (SAC, seed 42, 500k steps)')
-ax.legend()
 ax.grid(axis='y', alpha=0.3)
 for b, v in zip(bars, vals):
     ax.annotate(f'{v:.0f}', (b.get_x() + b.get_width() / 2, v),

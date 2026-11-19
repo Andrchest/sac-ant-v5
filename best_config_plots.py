@@ -10,13 +10,17 @@ OUT = Path('artifacts/ant_sac_full_20261021T194131399885Z/hardening')
 OUT.mkdir(parents=True, exist_ok=True)
 
 best = []
-for d in sorted(Path('artifacts').glob('xp_sac_5[012]_*best*')):
+bundle_best = Path('artifacts/campaign/best')
+directories = sorted(bundle_best.glob('seed_*')) if bundle_best.is_dir() else sorted(Path('artifacts').glob('xp_sac_5[012]_*best*'))
+for d in directories:
     sp = d / 'summary.json'
     if sp.exists():
         s = json.loads(sp.read_text())
         best.append((s['seed'], s['final_return_mean'], s['final_return_std'],
                      s['final_x_progress_mean'], s['final_fall_rate']))
 best.sort()
+if len(best) != 3 or [row[0] for row in best] != [50, 51, 52]:
+    raise ValueError('Expected complete best-config summaries for seeds 50, 51 and 52')
 base = [(42, 5701.04, 157.17, 286.39, 0.0),
         (43, 3286.0, 904.0, 171.0, 0.5),
         (44, 2571.0, 1108.0, 133.0, 0.43)]
@@ -37,7 +41,7 @@ ax.set_xticks(list(x))
 ax.set_xticklabels([f'run {i+1}\nbase seed {base[i][0]}\nbest seed {best[i][0]}' for i in x],
                    fontsize=8)
 ax.set_ylabel('Eval return (1M steps)')
-ax.set_title('Best config vs base config (SAC, Ant-v5, 1M steps, 30 eval eps)')
+ax.set_title('SAC 1M: base n=10/10/30; best n=30 per seed')
 ax.legend(fontsize=9)
 ax.grid(axis='y', alpha=0.3)
 for i in x:

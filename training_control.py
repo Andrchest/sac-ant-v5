@@ -33,7 +33,15 @@ def validate_resume(path, mode, seeds):
     if config_path is None:
         raise FileNotFoundError(seed_dir.parent / 'config.json')
     config = json.loads(config_path.read_text())
-    if config['mode'] != 'full' or config['seeds'] != seeds:
+    # Check the actual seed directory, including periodic bundles nested below it.
+    seed_parents = [parent for parent in path.parents if parent.name.startswith('seed_')]
+    if not seed_parents:
+        raise ValueError('Resume checkpoint is not inside a seed directory')
+    try:
+        checkpoint_seed = int(seed_parents[0].name.removeprefix('seed_'))
+    except ValueError as exc:
+        raise ValueError('Invalid checkpoint seed directory') from exc
+    if config['mode'] != 'full' or checkpoint_seed != seeds[0] or checkpoint_seed not in config['seeds']:
         raise ValueError('Resume requires a full checkpoint of the same training seed, not smoke')
     replay = seed_dir / 'replay_buffer.pkl'
     if not replay.is_file():

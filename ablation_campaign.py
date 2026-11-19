@@ -44,6 +44,32 @@ def estimate_seconds(exp, baseline_s_per_m):
     return exp['steps'] / 1e6 * baseline_s_per_m * scale + EVAL_OVERHEAD_S
 
 
+def run_process(cmd, output, stop, grace_seconds):
+    """Allow running jobs a bounded grace period, then stop their process group."""
+    proc = subprocess.Popen(cmd, stdout=output, stderr=subprocess.STDOUT,
+                            start_new_session=True)
+    deadline = None
+    while True:
+        try:
+            return proc.wait(timeout=0.2)
+        except subprocess.TimeoutExpired:
+            if stop['flag'] and deadline is None:
+                deadline = time.monotonic() + grace_seconds
+            if deadline is not None and time.monotonic() >= deadline:
+                try:
+                    os.killpg(proc.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                try:
+                    return proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    return proc.wait()
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -55,7 +81,11 @@ def main():
                    help='measured seconds per 1M steps for SAC [256,256] at this thread count')
     p.add_argument('--output', default='artifacts/campaign')
     p.add_argument('--limit', type=int, default=0, help='run at most N experiments (0 = all)')
+    p.add_argument('--shutdown-grace', type=float, default=30,
+                   help='seconds to wait for active jobs after signal before termination')
     args = p.parse_args()
+    if args.shutdown_grace < 0:
+        p.error('--shutdown-grace must be non-negative')
 
     assert args.workers * args.threads <= 12, 'workers*threads must be <= 12 cores'
     deadline = parse_deadline(args.deadline)
@@ -72,7 +102,7 @@ def main():
 
     def on_sigint(signum, frame):
         stop['flag'] = True
-        print('SIGINT: finishing running experiments, marking rest pending...', flush=True)
+        print(f'Signal: waiting up to {args.shutdown_grace:g}s for active experiments, then terminating them...', flush=True)
 
     signal.signal(signal.SIGINT, on_sigint)
     signal.signal(signal.SIGTERM, on_sigint)
@@ -91,7 +121,8 @@ def main():
                              final_return_std=s.get('final_return_std'),
                              final_x_progress_mean=s.get('final_x_progress_mean'),
                              final_fall_rate=s.get('final_fall_rate'),
-                             train_seconds=s.get('train_seconds'), run_dir=s.get('run_dir')))
+                             train_seconds=s.get('train_seconds'), run_dir=s.get('run_dir'),
+                             checkpoints=s.get('checkpoints')))
         summary = dict(campaign='sac_ant_v5_ablation', deadline=args.deadline,
                        workers=args.workers, threads=args.threads,
                        baseline_seconds_per_million=args.baseline_seconds_per_million,
@@ -119,7 +150,7 @@ def main():
             _write_report_locked()
         t0 = time.time()
         with open(log, 'w') as lf:
-            proc = subprocess.run(cmd, stdout=lf, stderr=subprocess.STDOUT, text=True)
+            returncode = run_process(cmd, lf, stop, args.shutdown_grace)
         dt = time.time() - t0
         # Parse the authoritative summary event from this run's own log.
         s = None
@@ -137,7 +168,7 @@ def main():
                     break
         except OSError:
             pass
-        if s:
+        if s and returncode == 0:
             with lock:
                 state[exp_id].update(status='done',
                                      final_return_mean=s.get('final_return_mean'),
@@ -149,7 +180,7 @@ def main():
                                      checkpoints=s.get('checkpoints'))
         else:
             with lock:
-                state[exp_id]['status'] = 'error' if proc.returncode != 0 else 'done_no_summary'
+                state[exp_id]['status'] = 'error' if returncode != 0 else 'done_no_summary'
         with lock:
             state[exp_id]['wall_seconds'] = round(dt, 1)
         print(f'[{exp_id}] {state[exp_id]["status"]} in {dt:.0f}s', flush=True)
@@ -186,6 +217,10 @@ def main():
                 del running[exp_id]
         time.sleep(2)
 
+    # Workers enforce a bounded shutdown and record their final status before
+    # the main thread publishes the final report.
+    for worker in running.values():
+        worker.join()
     for exp_id in queue:
         with lock:
             state[exp_id]['status'] = 'pending'
@@ -195,7 +230,7 @@ def main():
 
 class _Thread(threading.Thread):
     def __init__(self, fn, arg):
-        super().__init__(daemon=True)
+        super().__init__(daemon=False)
         self._fn, self._arg = fn, arg
 
     def run(self):
@@ -233,7 +268,7 @@ def write_markdown(path, summary):
                 lines.append(f'| {c["step"]:,} | {c["return_mean"]:.1f} | {c["return_std"]:.1f} '
                              f'| {c["x_progress_mean"]:.2f} | {c["fall_rate"]:.2f} |')
             lines.append('')
-    path.write_text('\n'.join(lines))
+    path.write_text('\n'.join(lines), encoding='utf-8')
 
 
 if __name__ == '__main__':
