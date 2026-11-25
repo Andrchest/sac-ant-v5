@@ -1,5 +1,6 @@
 """Build and verify an explicit allowlist of downloadable experiment files."""
 from pathlib import Path
+import argparse
 import hashlib
 from importlib.metadata import version
 import json
@@ -7,6 +8,11 @@ import os
 import subprocess
 import zipfile
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--submission', action='store_true', help='write the Moodle submission draft archive')
+parser.add_argument('--compact', action='store_true',
+                    help='omit superseded media, TensorBoard events and duplicate loss logs')
+args = parser.parse_args()
 ROOT = Path(__file__).resolve().parents[1]
 RUN = Path(json.loads((ROOT / 'artifacts/latest_run.json').read_text())['run_dir'])
 assert RUN.name == 'ant_sac_full_20261021T194131399885Z'
@@ -29,24 +35,34 @@ for name in ['.gitignore', 'README.md', 'requirements-monitor.txt', 'sac_ant_v5.
              'tests/test_followup_analysis.py', 'EXPERIMENT_PROTOCOL.md', 'followup_campaign.py', 'followup_analysis.py',
              'run_experiment.py', 'campaign_experiments.py', 'ablation_campaign.py',
              'campaign_analysis.py', 'campaign_plots.py', 'best_config_plots.py',
-             'best_vs_base_stats.py', 'stochastic_eval.py', 'compare_hero_checkpoints.py', 'make_slide.py']:
+             'best_vs_base_stats.py', 'stochastic_eval.py', 'compare_hero_checkpoints.py', 'make_slide.py',
+             'best_config_campaign.sh', 'make_rollout.py', 'make_presentation_video.py', 'export_research_data.py', 'tests/test_submission.py']:
     include(ROOT / name, name)
 
 result_names = ['summary.json', 'config.json', 'versions.txt', 'learning_curves.png',
-    'live_curves.png', 'evaluation_all.csv', 'paired_returns.csv',
+    'evaluation_all.csv', 'paired_returns.csv',
     'unseen_reset_validation.json', 'unseen_reset_validation.csv',
-    'seed_42/train_episodes.csv', 'seed_42/losses.csv', 'seed_42/evaluation.csv',
+    'seed_42/train_episodes.csv', 'seed_42/evaluation.csv',
     'seed_42/train.monitor.csv', 'seed_42/eval/evaluations.npz']
+if not args.compact:
+    result_names += ['live_curves.png', 'seed_42/losses.csv']
 for name in result_names:
     include(RUN / name, f'artifacts/{RUN.name}/{name}')
 # Hero model = best config (seed 50); base-config model/video stay on the website only.
-for name in ['sac_final.zip', 'rollout.mp4', 'train_episodes.csv', 'losses.csv', 'hero_summary.json']:
+hero_names = ['sac_final.zip', 'presentation_demo.mp4', 'train_episodes.csv', 'hero_summary.json']
+if not args.compact:
+    hero_names += ['rollout.mp4', 'losses.csv']
+for name in hero_names:
     include(RUN / 'best_config/seed_50' / name, f'artifacts/{RUN.name}/best_config/seed_50/{name}')
 include(RUN / 'best_config/seed_50/eval/evaluations.npz', f'artifacts/{RUN.name}/best_config/seed_50/eval/evaluations.npz')
-for path in sorted((RUN / 'tensorboard').rglob('events.out.tfevents.*')):
-    include(path, f'artifacts/{RUN.name}/{path.relative_to(RUN).as_posix()}')
-for name in ['seeds.png', 'convergence.png', 'ablation.png', 'baselines.png',
-             'best_config.png', 'best_vs_base.png', 'results_slide.png', 'followup.png']:
+if not args.compact:
+    for path in sorted((RUN / 'tensorboard').rglob('events.out.tfevents.*')):
+        include(path, f'artifacts/{RUN.name}/{path.relative_to(RUN).as_posix()}')
+hardening_names = ['seeds.png', 'convergence.png', 'ablation.png', 'baselines.png',
+                   'best_config.png', 'best_vs_base.png', 'followup.png']
+if not args.compact:
+    hardening_names += ['results_slide.png']
+for name in hardening_names:
     include(RUN / 'hardening' / name, f'artifacts/{RUN.name}/hardening/{name}')
 # Include small primary data, not checkpoints or replay buffers. Rewrite the
 # campaign index so analysis works from the extracted bundle's project root.
@@ -67,36 +83,53 @@ for seed in (50, 51, 52):
     include(matches[0].parent / 'summary.json', f'artifacts/campaign/best/seed_{seed}/summary.json')
 for name in ('hero_checkpoint_comparison.csv', 'hero_checkpoint_comparison.json'):
     include(ROOT / 'artifacts/campaign' / name, f'artifacts/campaign/{name}')
-for path in sorted((ROOT / 'research/followup').rglob('*')):
-    if path.is_file():
-        include(path, path.relative_to(ROOT).as_posix())
+for directory in ('research/followup', 'research/campaign'):
+    for path in sorted((ROOT / directory).rglob('*')):
+        if path.is_file():
+            include(path, path.relative_to(ROOT).as_posix())
+for name in ('analysis.md', 'campaign_report.md'):
+    include(ROOT / 'artifacts/campaign' / name, f'artifacts/campaign/{name}')
 include(ROOT / 'artifacts/campaign/analysis.md', 'HARDENING_ANALYSIS.md')
+include(ROOT / 'submission/PRESENTATION_DRAFT.md', 'PRESENTATION_DRAFT.md')
+include(ROOT / 'submission/README_SUBMISSION.md', 'README_SUBMISSION.md')
 night = Path(json.loads((ROOT / 'artifacts/night_latest.json').read_text())['directory'])
 include(night / 'report.md', 'OVERNIGHT_REPORT.md')
 
 packages = ['gymnasium', 'stable-baselines3', 'mujoco', 'torch', 'numpy', 'pandas',
-            'matplotlib', 'imageio', 'imageio-ffmpeg', 'rich', 'tensorboard',
+            'matplotlib', 'imageio', 'imageio-ffmpeg', 'pillow', 'rich', 'tensorboard',
             'nbformat', 'nbclient', 'ipykernel', 'pytest']
 files['requirements.txt'] = ('# Exact versions recorded on Linux / Python 3.10.19.\n' +
     '# For CPU-only PyTorch, install the matching torch wheel first (see BUNDLE_README.md).\n' +
     '\n'.join(f'{name}=={version(name)}' for name in packages) + '\n').encode()
 
-files['BUNDLE_README.md'] = f'''# SAC × Ant-v5 — code, model and results
+contents = ('rollout video and TensorBoard event data' if not args.compact else
+            'recorded demo video')
+tb_note = ('TensorBoard can view the saved events: '
+           '`python -m tensorboard.main --logdir artifacts --host 127.0.0.1 --port 6006`.'
+           if not args.compact else
+           'TensorBoard event logs are not included in this compact archive; the plotted '
+           'curves are.')
+files['BUNDLE_README.md'] = (f'''# SAC × Ant-v5 — code, model and results
 
 This bundle contains the experiment source, notebook, final trained model, plots,
-CSV tables, rollout video and TensorBoard event data. Training finished at
+CSV tables and {contents}. Training finished at
 **1,000,000 steps / 990,000 gradient updates** with training seed 42.
 
 ## View existing results without running training
 
 - Open `artifacts/{RUN.name}/learning_curves.png`.
-- Open `artifacts/{RUN.name}/best_config/seed_50/rollout.mp4` in a video player.
+- Open `artifacts/{RUN.name}/best_config/seed_50/presentation_demo.mp4` in a video player.
 - Read `OVERNIGHT_REPORT.md` for the 10-episode final evaluation, 30 fresh-reset checks,
   and the full hardening campaign (multi-seed, convergence, ablations, baselines).
 - `HARDENING_ANALYSIS.md` and `artifacts/{RUN.name}/hardening/*.png` (seeds, convergence,
-  ablation, baselines, and a ready-to-paste `results_slide.png`) summarize the campaign.
+  ablation, baselines, follow-up) summarize the campaign.
 - The notebook's saved outputs are from the initial smoke test, not the full run.
-  The complete full-run results are in the artifacts directory above.
+  The complete full-run results are in the artifacts directory above.''' + ('' if not args.compact else '''
+
+This is the compact archive. It omits the superseded `rollout.mp4`, the earlier
+`results_slide.png`, the intermediate `live_curves.png`, the duplicate loss CSVs and
+the TensorBoard event logs. Every reported number, primary evaluation CSV, plot and
+the trained model remain, so all claims in the reports are still checkable.''') + f'''
 
 ## Install (tested platform: Linux, Python 3.10.19)
 
@@ -106,8 +139,7 @@ CSV tables, rollout video and TensorBoard event data. Training finished at
 4. Install the remaining pinned packages: `python -m pip install -r requirements.txt`.
 
 Dependencies or graphics drivers may need platform-specific adjustments. No `.venv`,
-credentials, caches or Git history are included. TensorBoard can view the saved events:
-`python -m tensorboard.main --logdir artifacts --host 127.0.0.1 --port 6006`.
+credentials, caches or Git history are included. {tb_note}
 
 ## Run the trained model (no learning)
 
@@ -176,7 +208,7 @@ three training seeds and one environment do not establish general superiority.
 The single-seed 500k SAC base control scored 1584 ± 1183 (7/10 falls). Full protocol,
 per-episode CSVs, provenance and training-seed analysis are in `EXPERIMENT_PROTOCOL.md`
 and `research/followup/`; see `OVERNIGHT_REPORT.md` section 7.
-'''.encode()
+''').encode()
 
 files['demo_policy.py'] = f'''"""Run the downloaded SAC checkpoint without training or replay-buffer allocation."""
 from pathlib import Path
@@ -227,14 +259,22 @@ if __name__ == '__main__':
 compile(files['demo_policy.py'], 'demo_policy.py', 'exec')
 manifest = dict(run=RUN.name, training_steps=1000000,
     source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+    source_dirty=bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True).strip()),
     excluded=['replay buffer', 'duplicate best/periodic models', 'local environments', 'credentials'],
     sha256={name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())})
 files['MANIFEST.json'] = json.dumps(manifest, indent=2).encode()
-archive = RUN / 'sac_ant_v5_bundle.zip'
+archive_name = 'sac_ant_v5_submission.zip' if args.submission else 'sac_ant_v5_bundle.zip'
+if args.compact:
+    archive_name = archive_name.replace('.zip', '_compact.zip')
+archive = RUN / archive_name
 temporary = archive.with_suffix('.zip.tmp')
 with zipfile.ZipFile(temporary, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as output:
     for name, data in sorted(files.items()):
-        output.writestr(PREFIX + name, data)
+        info = zipfile.ZipInfo(PREFIX + name)
+        info.create_system = 3
+        info.external_attr = 0o100644 << 16
+        info.compress_type = zipfile.ZIP_DEFLATED
+        output.writestr(info, data)
 assert temporary.stat().st_size < 10_000_000, 'Bundle exceeded 10 MB safety limit'
 with zipfile.ZipFile(temporary) as check:
     assert check.testzip() is None
@@ -245,6 +285,10 @@ with zipfile.ZipFile(temporary) as check:
     for name, digest in manifest['sha256'].items():
         assert hashlib.sha256(check.read(PREFIX + name)).hexdigest() == digest
 os.replace(temporary, archive)
+if args.submission:
+    # Convenient direct download next to the archive on the Tailscale site.
+    (RUN / 'PRESENTATION_DRAFT.md').write_bytes(files['PRESENTATION_DRAFT.md'])
+    (RUN / 'README_SUBMISSION.md').write_bytes(files['README_SUBMISSION.md'])
 digest = hashlib.sha256(archive.read_bytes()).hexdigest()
 checksum = archive.with_suffix('.zip.sha256')
 checksum.write_text(f'{digest}  {archive.name}\n')

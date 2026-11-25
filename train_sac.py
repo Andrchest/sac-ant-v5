@@ -89,7 +89,7 @@ def main(argv=None):
     dashboard = None
     try:
         for index, cell in enumerate(notebook['cells']):
-            if cell['cell_type'] != 'code' or cell['id'] in ('install', 'background-viewer'):
+            if cell['cell_type'] != 'code' or cell['id'] in ('install', 'background-viewer', 'toy-sac-update'):
                 continue
             source = cell['source']
             if isinstance(source, list):

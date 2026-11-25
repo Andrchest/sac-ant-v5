@@ -28,7 +28,7 @@ The same final checkpoint was evaluated without additional training on seeds 900
 - Mean episode length: **944.13 / 1000**.
 - Falls: **3 / 30 (10%)**. This is not a perfectly reliable gait.
 - The predefined operational gait threshold is still met. Training remained at **1,000,000 steps**; no unnecessary extension was started.
-- Full metrics: `../ant_sac_full_20261021T194131399885Z/unseen_reset_validation.json` and `.csv`.
+- Full metrics (paths relative to bundle root): `artifacts/ant_sac_full_20261021T194131399885Z/unseen_reset_validation.json` and `.csv`.
 
 Artifact checks passed: final/best model ZIP integrity, full replay, CSV counts, PNG, TensorBoard events, and 1001-frame MP4 decoding. The learning curves and a rollout contact sheet were visually inspected.
 
@@ -38,7 +38,7 @@ Only one training seed was run; fresh reset seeds are not independent training s
 
 ## Hardening campaign (2026-11-12, multi-seed + ablations + baselines)
 
-To address the single-seed limitation above, a 10-experiment campaign was run on 12 CPU cores (the GPU does not accelerate this workload — the MuJoCo physics step is the bottleneck, measured ~equal speed on CPU and CUDA). Full data: `../campaign/analysis.md`, `../campaign/campaign_summary.json`.
+To address the single-seed limitation above, a 10-experiment campaign was run on 12 CPU cores (the GPU does not accelerate this workload — the MuJoCo physics step is the bottleneck, measured ~equal speed on CPU and CUDA). Full data (paths relative to bundle root): `artifacts/campaign/analysis.md`, `artifacts/campaign/campaign_summary.json`.
 
 ### 1. Inter-seed variance (SAC, 1M steps, base hyperparameters)
 
@@ -72,7 +72,7 @@ For this one training seed, checkpoint returns fluctuate after 750k (1M→2M: 32
 | batch size | 256 (base) | — (see 1M ref) | | |
 | batch size | 512 | 1707 | 1124 | 70% |
 
-These are single-training-seed observations. The 1e-3 arm exceeded 1e-4 and batch 128 exceeded 512 under this protocol. No matched 500k final-evaluation control for the base configuration was run; a causal comparison to base is not established. (`ablation.png`)
+These are single-training-seed observations. The 1e-3 arm exceeded 1e-4 and batch 128 exceeded 512 under this protocol. No matched 500k final-evaluation base control was available in the original campaign. A later single-seed control is reported in §7; it does not establish a general causal effect. (`ablation.png`)
 
 ### 4. Algorithm baselines (1M steps, seed 42)
 
@@ -88,7 +88,7 @@ These are results of specific configurations at one training seed, not evidence 
 - SAC, TD3 and PPO figures describe these individual configurations; no general ranking is established.
 - The observed base 1M range is 2571–5701 (mean ≈ 3853), mixing checkpoint and final evaluation protocols.
 - Seed 43's checkpoint curve fluctuates after 750k; one trajectory cannot establish general convergence.
-- Ablations are exploratory and lack a matched final-evaluation base arm.
+- Ablations are exploratory; a later single-seed 500k base control is described in §7.
 
 ### 5. Best-config agent (applied the ablation findings)
 
@@ -108,7 +108,7 @@ Paired held-out inference on reset seeds 920000–920029: checkpoint **5854.15 �
 
 ### 6. Statistical methods and limitations
 
-**Evaluation protocol.** Final evaluations use deterministic actions and seeded resets. The hero was additionally evaluated stochastically on 30 resets: **5685 ± 129, 0/30 falls, x = 277 m**. This is a finite-sample observation, not proof of robustness or absence of overfitting.
+**Evaluation protocol.** Final evaluations use deterministic actions and seeded resets. A previously quoted stochastic evaluation is withdrawn from this report because its per-episode source was not preserved; rerunning an unseeded stochastic policy would not reproduce the original sample.
 
 **Statistical correction.** An earlier version reported pooled episode-level bootstrap intervals, Mann–Whitney p and Cohen's d as evidence of a configuration effect. That inference was invalid: episodes share training runs, seed 43 was omitted, and unequal episode counts weighted training seeds unequally. Those numbers are withdrawn. Independent training runs are the relevant units for claims across training seeds.
 

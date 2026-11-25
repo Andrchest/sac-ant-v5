@@ -16,7 +16,7 @@
 <span class="badge">✓ Лучшая модель: best config · seed 50</span>
 <h1>SAC × Ant-v5</h1>
 <p>Настоящий эксперимент Gymnasium / MuJoCo / Stable-Baselines3. После исследовательской кампании выбрана конфигурация lr=1e-3, batch=128. Сравнения ограничены малым числом независимых обучений.</p>
-<div class="actions"><a class="button" href="sac_ant_v5_bundle.zip" download>Скачать результаты · ZIP ~7,1 МиБ</a><a class="button secondary" href="#best">Лучшая модель</a><a class="button secondary" href="#followup">Новое сравнение</a><a class="button secondary" href="#hardening">Надёжность · сиды/абляции</a><a class="button secondary" href="#video">Смотреть видео</a><a class="button secondary" href="#graphs">Графики</a><a class="button secondary" href="http://100.64.62.13:6007/" target="_blank" rel="noopener">Открыть TensorBoard ↗</a></div>
+<div class="actions"><a class="button" href="sac_ant_v5_submission.zip" download>Материалы для сдачи · ZIP</a><a class="button secondary" href="PRESENTATION_DRAFT.md" download>Черновик презентации</a><a class="button secondary" href="sac_ant_v5_bundle.zip" download>Исследовательский архив</a><a class="button secondary" href="#best">Лучшая модель</a><a class="button secondary" href="#followup">Новое сравнение</a><a class="button secondary" href="#hardening">Надёжность · сиды/абляции</a><a class="button secondary" href="#video">Смотреть видео</a><a class="button secondary" href="#graphs">Графики</a><a class="button secondary" href="http://100.64.62.13:6007/" target="_blank" rel="noopener">Открыть TensorBoard ↗</a></div>
 </header>
 <div class="cards">
 <div class="card"><span>Hero: награда (best config)</span><strong>5 818 ± 148</strong></div>
@@ -52,7 +52,7 @@
 <img src="hardening/best_config.png" alt="Best config seeds">
 <p class="subtle">На 500k base seed 43 дал 2 324 (checkpoint); seed 42 — 3 411 ± 1 476 (периодическая оценка, n=10). Протоколы различаются; причинного сравнения нет. Hero — <a href="best_config/seed_50/sac_final.zip" download>seed 50</a>.</p>
 <h3>Ограничения статистики</h3>
-<p class="note">Прежние pooled p-value и доверительные интервалы отозваны: эпизоды одной модели не являются независимыми обучениями, а веса сидов были неравными. Стохастическая оценка hero: 5 685 ± 129, 0/30 падений — наблюдение, не гарантия робастности.</p>
+<p class="note">Прежние pooled p-value и доверительные интервалы отозваны: эпизоды одной модели не являются независимыми обучениями, а веса сидов были неравными. Прежняя стохастическая оценка также отозвана: её поэпизодные исходные данные не сохранились.</p>
 <p class="subtle">Checkpoint до последнего обновления: 5 279 ± 1 601, 2/10 падений; final после одного обновления: 5 818 ± 148, 0/30. Первые 10 reset seeds совпадают, но веса различаются. На других общих reset seeds 920000–920029: checkpoint 5 854 ± 153, final 5 810 ± 100, оба 0/30 падений; это одна пара моделей, не независимые обучения.</p>
 <p class="subtle"><b>Ограничения:</b> сравниваются разные training seeds (base 42/43/44, best 50/51/52); по три независимых обучения, разные протоколы оценки и выбор конфигурации по абляциям. Только Ant-v5; обобщение не доказано.</p>
 </section>

@@ -88,6 +88,9 @@ def main():
         for source in (summary_path, csv_path):
             (dst / source.name).write_bytes(source.read_bytes())
         provenance['sources'][name] = {source.name: sha(source) for source in (summary_path, csv_path)}
+    # Preserve the exact input bytes whose digest is recorded; the portable status
+    # below has different paths and is intentionally a separate file.
+    (args.out / 'source_status.json').write_bytes(args.status.read_bytes())
     (args.out / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n', encoding='utf-8')
     portable = {'protocol': data['protocol'], 'started': data['started'], 'jobs': {}}
     for name, job in jobs.items():
