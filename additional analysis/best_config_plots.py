@@ -12,6 +12,8 @@ OUT.mkdir(parents=True, exist_ok=True)
 best = []
 bundle_best = Path('artifacts/campaign/best')
 directories = sorted(bundle_best.glob('seed_*')) if bundle_best.is_dir() else sorted(Path('artifacts').glob('xp_sac_5[012]_*best*'))
+if not directories:
+    directories = sorted(Path('research/campaign/best').glob('seed_*'))
 for d in directories:
     sp = d / 'summary.json'
     if sp.exists():

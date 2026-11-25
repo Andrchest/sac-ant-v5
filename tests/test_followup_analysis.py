@@ -1,9 +1,10 @@
 import csv
+from importlib import import_module
 import json
 
 import pytest
 
-from followup_analysis import validate
+validate = import_module('additional analysis.followup_analysis').validate
 
 
 def fixture_run(tmp_path):

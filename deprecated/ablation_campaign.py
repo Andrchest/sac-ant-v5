@@ -10,7 +10,7 @@ directory. Ctrl+C marks remaining experiments as pending and finalises the
 report; completed experiments are never lost.
 
 Example:
-    python ablation_campaign.py --workers 3 --threads 4 \
+    python -m deprecated.ablation_campaign --workers 3 --threads 4 \
         --deadline 2026-11-13T07:00:00+03:00 \
         --baseline-seconds-per-million 9000 \
         --output artifacts/campaign
@@ -26,9 +26,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from campaign_experiments import EXPERIMENTS, REFERENCE  # noqa: E402
+from .campaign_experiments import EXPERIMENTS, REFERENCE
 
+ROOT = Path(__file__).resolve().parents[1]
 NET_SCALE = {'256,256': 1.0, '128,128': 0.6, '64,64': 0.4}
 ALGO_SCALE = {'sac': 1.0, 'td3': 0.9, 'ppo': 1.1}
 EVAL_OVERHEAD_S = 120  # random + initial + final + checkpoint evals, ~2 min
@@ -133,7 +133,7 @@ def main():
 
     def run_one(exp_id):
         e = state[exp_id]['exp']
-        cmd = [sys.executable, 'run_experiment.py', '--algo', e['algo'],
+        cmd = [sys.executable, str(ROOT / 'run_experiment.py'), '--algo', e['algo'],
                '--seed', str(e['seed']), '--steps', str(e['steps']),
                '--net', str(e.get('net', '256,256')), '--lr', str(e.get('lr', 3e-4)),
                '--batch', str(e.get('batch', 256)), '--gamma', str(e.get('gamma', 0.99)),
@@ -239,11 +239,11 @@ class _Thread(threading.Thread):
 
 def write_markdown(path, summary):
     ref = summary['reference']
-    lines = ['# SAC × Ant-v5 — отчёт кампании абляций', '',
-             f'Дедлайн: `{summary["deadline"]}` · воркеры: {summary["workers"]} · '
-             f'потоков/воркер: {summary["threads"]}', '',
-             '## Итоги по экспериментам', '',
-             '| id | prio | algo | seed | steps | net | lr | batch | статус | final mean | final std | x-progress | fall | сек |',
+    lines = ['# SAC × Ant-v5 ablation campaign report', '',
+             f'Deadline: `{summary["deadline"]}` · Workers: {summary["workers"]} · '
+             f'Threads per worker: {summary["threads"]}', '',
+             '## Experiment results', '',
+             '| id | priority | algorithm | seed | steps | network | learning rate | batch | status | final mean | final std | x-progress | fall rate | seconds |',
              '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
     for r in summary['experiments']:
         def f(v, nd=1):
@@ -253,12 +253,12 @@ def write_markdown(path, summary):
                      f'| {f(r["final_return_mean"])} | {f(r["final_return_std"])} '
                      f'| {f(r["final_x_progress_mean"])} | {f(r["final_fall_rate"], 2)} '
                      f'| {f(r["train_seconds"], 0)} |')
-    lines += ['', '## Базовый эталон (предшествующий полный запуск)', '',
-              f'- SAC seed {ref["seed"]}, {ref["steps"]:,} шагов, net {ref["net"]}: '
+    lines += ['', '## Reference baseline from the earlier full run', '',
+              f'- SAC seed {ref["seed"]}, {ref["steps"]:,} steps, network {ref["net"]}: '
               f'final **{ref["final_return_mean"]:.2f} ± {ref["final_return_std"]:.2f}** '
               f'(n={ref["eval_episodes"]}), x-progress {ref["final_x_progress_mean"]:.2f} m, '
               f'fall {ref["final_fall_rate"]:.0%}.', '',
-              '## Конвергенция (checkpoint-оценки)', '']
+              '## Convergence across checkpoint evaluations', '']
     for r in summary['experiments']:
         if r.get('checkpoints'):
             lines.append(f'### {r["id"]}')

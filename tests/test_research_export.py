@@ -1,7 +1,8 @@
 import hashlib
+from importlib import import_module
 import json
 
-from export_research_data import export
+export = import_module('additional analysis.export_research_data').export
 
 
 def test_derived_index_recovers_checkpoints_without_modifying_original(tmp_path):

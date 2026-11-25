@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and export the preregistered follow-up at training-run level.
+"""Validate and export the fixed-protocol follow-up at training-run level.
 
 Run from repository root. CSVs and summaries are copied unchanged into a small,
 portable research directory, with source hashes. No model or replay is copied.
@@ -11,11 +11,14 @@ import json
 import math
 from pathlib import Path
 import statistics
+import sys
 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+if not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from followup_campaign import experiment_jobs
 
 
@@ -78,7 +81,7 @@ def main():
     verified = {}
     for name, job in jobs.items():
         if job['args'] != expected[name]:
-            raise ValueError(f'{name}: job differs from preregistered settings')
+            raise ValueError(f'{name}: job differs from the protocol settings')
         verified[name] = validate(name, job)
     args.out.mkdir(parents=True, exist_ok=True)
     provenance = {'status_sha256': sha(args.status), 'sources': {}}
@@ -97,10 +100,11 @@ def main():
         portable['jobs'][name] = {'status': job['status'], 'exit_code': job['exit_code'],
                                   'args': job['args'], 'run_dir': (args.out / 'runs' / name).as_posix()}
     (args.out / 'status.json').write_text(json.dumps(portable, indent=2) + '\n', encoding='utf-8')
-    lines = ['# Follow-up: preregistered Ant-v5 comparison', '',
-             'Protocol: `EXPERIMENT_PROTOCOL.md`. Three independent training seeds per algorithm;',
-             '30 paired deterministic reset seeds per seed. Results describe fixed configurations,',
-             'not tuned algorithms or a statistically established general ranking.', '',
+    lines = ['# Fixed-protocol Ant-v5 follow-up', '',
+             'The protocol is defined in `EXPERIMENT_PROTOCOL.md`. Each algorithm was trained',
+             'on seeds 60, 61, and 62. Within each training seed, the algorithms used the same',
+             '30 deterministic evaluation resets. Results describe these fixed configurations',
+             'in Ant-v5. The falls column counts unhealthy environment terminations.', '',
              '| algorithm | training seed | steps | return mean ± episode SD | x progress (m) | falls |',
              '|---|---:|---:|---:|---:|---:|']
     seed_means = {}

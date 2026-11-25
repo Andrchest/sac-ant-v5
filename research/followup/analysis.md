@@ -1,8 +1,9 @@
-# Follow-up: preregistered Ant-v5 comparison
+# Fixed-protocol Ant-v5 follow-up
 
-Protocol: `EXPERIMENT_PROTOCOL.md`. Three independent training seeds per algorithm;
-30 paired deterministic reset seeds per seed. Results describe fixed configurations,
-not tuned algorithms or a statistically established general ranking.
+The protocol is defined in `EXPERIMENT_PROTOCOL.md`. Each algorithm was trained
+on seeds 60, 61, and 62. Within each training seed, the algorithms used the same
+30 deterministic evaluation resets. Results describe these fixed configurations
+in Ant-v5. The falls column counts unhealthy environment terminations.
 
 | algorithm | training seed | steps | return mean ± episode SD | x progress (m) | falls |
 |---|---:|---:|---:|---:|---:|

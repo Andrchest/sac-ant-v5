@@ -14,10 +14,10 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from sac_monitor import atomic_json
-from training_control import parse_stop_at
+from support.sac_monitor import atomic_json
+from support.training_control import parse_stop_at
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def assess_rows(rows):

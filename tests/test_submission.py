@@ -33,6 +33,6 @@ def test_followup_provenance_hash_has_shipped_source():
 
 
 def test_report_withdraws_unverifiable_stochastic_result():
-    report = Path('research/publication/report.md').read_text()
+    report = Path('REPORT.md').read_text(encoding='utf-8')
     assert 'previously quoted stochastic evaluation is withdrawn' in report
     assert '5685 ± 129' not in report

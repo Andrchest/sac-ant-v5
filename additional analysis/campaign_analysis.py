@@ -4,13 +4,13 @@
 Reads every experiment summary.json (plus the pre-existing reference run) and
 produces:
   - descriptive cross-seed statistics at 1M steps (per-seed table and range)
-  - convergence curve (from the conv run's checkpoint evaluations)
+  - checkpoint returns along the seed 43 training run
   - one-factor-at-a-time ablation table (500k budget)
-  - baseline comparison (SAC vs PPO vs TD3 at 1M)
+  - single-seed baseline comparison at a requested 1M steps
   - a markdown block ready to paste into the report + website
 
 Usage:
-    python campaign_analysis.py --campaign artifacts/campaign \
+    python "additional analysis/campaign_analysis.py" --campaign research/campaign \
         --out artifacts/campaign/analysis.md
 """
 from __future__ import annotations
@@ -82,7 +82,10 @@ def _load_campaign(campaign_dir: Path):
     exps = []
     cs = campaign_dir / 'campaign_summary.json'
     if not cs.is_file():
-        raise FileNotFoundError(f'Missing required campaign index: {cs}')
+        derived = campaign_dir / 'derived_summary.json'
+        if not derived.is_file():
+            raise FileNotFoundError(f'Missing required campaign index: {cs}')
+        cs = derived
     if cs.exists():
         meta = json.loads(cs.read_text())
         for e in meta.get('experiments', []):
@@ -116,7 +119,9 @@ def _find(exps, xp_id=None):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--campaign', default='artifacts/campaign')
+    default_campaign = ('artifacts/campaign' if Path('artifacts/campaign/campaign_summary.json').is_file()
+                        else 'research/campaign')
+    ap.add_argument('--campaign', default=default_campaign)
     ap.add_argument('--out', default=None)
     args = ap.parse_args()
     cdir = Path(args.campaign)
@@ -137,13 +142,13 @@ def main():
     seed44 = _find(exps, xp_id='seed44_1m')
 
     seeds = []
-    seeds.append(('seed42', REF['mean'], REF['std'], REF['x'], REF['fall'], REF['n']))
+    seeds.append((42, 'Final policy', REF['mean'], REF['std'], REF['x'], REF['fall'], REF['n']))
     if seed43_1m:
-        seeds.append(('seed43', seed43_1m['return_mean'], seed43_1m['return_std'],
+        seeds.append((43, 'Checkpoint', seed43_1m['return_mean'], seed43_1m['return_std'],
                       seed43_1m['x_progress_mean'], seed43_1m['fall_rate'],
                       seed43_1m.get('n', 10)))
     if seed44:
-        seeds.append(('seed44', seed44['final_return_mean'], seed44['final_return_std'],
+        seeds.append((44, 'Final policy', seed44['final_return_mean'], seed44['final_return_std'],
                       seed44['final_x_progress_mean'], seed44['final_fall_rate'],
                       seed44['eval_episodes']))
 
@@ -151,22 +156,21 @@ def main():
     L.append('# Campaign analysis (auto-generated)\n')
 
     L.append('## Cross-seed, 1M steps, base hyperparameters (SAC net 256, lr 3e-4, batch 256)\n')
-    L.append('| seed | final return | std | x-progress (m) | fall rate | n |')
-    L.append('|---|---|---|---|---|---|')
-    for name, m, sd, x, f, n in seeds:
-        L.append(f'| {name} | {m:.0f} | {sd:.0f} | {x:.0f} | {f:.0%} | {n} |')
-    means = [s[1] for s in seeds]
+    L.append('| seed | evaluation | mean return | episode SD | x-progress (m) | fall rate | n |')
+    L.append('|---|---|---|---|---|---|---|')
+    for seed, evaluation, m, sd, x, f, n in seeds:
+        L.append(f'| {seed} | {evaluation} | {m:.0f} | {sd:.0f} | {x:.0f} | {f:.0%} | {n} |')
+    means = [s[2] for s in seeds]
     if len(means) >= 2:
         spread = max(means) - min(means)
-        L.append(f'\nCross-seed mean: **{st.mean(means):.0f}**, '
-                 f'range **{min(means):.0f}–{max(means):.0f}** '
-                 f'(spread {spread:.0f}). Inter-seed variance is large, so a single '
-                 f'seed is not representative; the previously reported 5701 is the '
-                 f'upper end of this range, not a typical value.')
+        L.append(f'\nThe unweighted mean of the three policy means was **{st.mean(means):.0f}**, '
+                 f'with a range of **{min(means):.0f}–{max(means):.0f}** '
+                 f'(spread {spread:.0f}). The comparison mixes checkpoint and final policies '
+                 f'and uses different evaluation episode counts.')
     L.append('')
 
-    # --- Convergence curve -------------------------------------------------
-    L.append('## Convergence (seed43, checkpoints every 250k)\n')
+    # --- Checkpoint returns ------------------------------------------------
+    L.append('## Checkpoint returns (seed 43, every 250,000 steps)\n')
     if seed43 and seed43.get('checkpoints'):
         L.append('| steps | return | std | x (m) | fall |')
         L.append('|---|---|---|---|---|')
@@ -200,22 +204,31 @@ def main():
     L.append('')
 
     # --- Baselines ---------------------------------------------------------
-    L.append('## Baselines, 1M steps, seed42\n')
-    L.append('| algo | final return | std | x (m) | fall |')
-    L.append('|---|---|---|---|---|')
-    L.append(f"| SAC (ref) | {REF['mean']:.0f} | {REF['std']:.0f} | {REF['x']:.0f} | {REF['fall']:.0%} |")
+    L.append('## Single-seed baselines (seed 42, requested 1,000,000 steps)\n')
+    L.append('| algorithm | actual steps | eval episodes | mean return | episode SD | x (m) | fall rate |')
+    L.append('|---|---|---|---|---|---|---|')
+    L.append(f"| SAC (reference) | {REF['steps']:,} | {REF['n']} | {REF['mean']:.0f} | "
+             f"{REF['std']:.0f} | {REF['x']:.0f} | {REF['fall']:.0%} |")
     for xp_id, name in (('ppo_1m', 'PPO'), ('td3_1m', 'TD3')):
         s = _find(exps, xp_id=xp_id)
         if s and s.get('final_return_mean') is not None:
-            L.append(f"| {name} | {s['final_return_mean']:.0f} | {s['final_return_std']:.0f} "
-                     f"| {s['final_x_progress_mean']:.0f} | {s['final_fall_rate']:.0%} |")
+            L.append(f"| {name} | {s['steps']:,} | {s['eval_episodes']} | "
+                     f"{s['final_return_mean']:.0f} | {s['final_return_std']:.0f} | "
+                     f"{s['final_x_progress_mean']:.0f} | {s['final_fall_rate']:.0%} |")
         else:
-            L.append(f"| {name} | (not run / skipped by deadline) | | | |")
+            L.append(f"| {name} | (not run / skipped by deadline) | | | | | |")
+    ppo = _find(exps, xp_id='ppo_1m')
+    if ppo and ppo['steps'] != ppo['config']['steps']:
+        L.append(f"\nPPO completed {ppo['steps']:,} steps because it collects "
+                 f"{ppo['config']['ppo_n_steps']:,}-step rollouts toward the requested "
+                 f"{ppo['config']['steps']:,}-step budget.")
     L.append('')
 
     md = '\n'.join(L)
     if args.out:
-        Path(args.out).write_text(md, encoding='utf-8')
+        output = Path(args.out)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(md, encoding='utf-8')
         print(f'wrote {args.out}')
     print(md)
 

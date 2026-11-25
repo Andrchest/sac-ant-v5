@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from training_control import TrainingControl, parse_stop_at, validate_resume
-from overnight_sac import assess_rows, extension_budget
+from deprecated.overnight_sac import assess_rows, extension_budget
+from support.sac_monitor import RunDashboard
+from support.training_control import TrainingControl, parse_stop_at, validate_resume
 from train_sac import parse_args
-from sac_monitor import RunDashboard
 
 
 class FakeModel:

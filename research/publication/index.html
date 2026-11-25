@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'">
-<title>SAC × Ant-v5 — результаты обучения</title>
+<title>SAC × Ant-v5 — training results</title>
 <style>
 :root{--bg:#09111e;--panel:#121e30;--line:#26364c;--fg:#eef4ff;--muted:#a9b8cc;--cyan:#67d7ff;--green:#7fe0b5}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top right,#15324a 0,transparent 45%),var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,sans-serif}main{max-width:1240px;margin:auto;padding:42px 24px 64px}h1{font-size:clamp(32px,5vw,56px);line-height:1.1;margin:14px 0}h2{font-size:24px;margin:0 0 18px}h3{margin:0 0 8px}p{margin:12px 0;color:var(--muted)}a{color:var(--cyan);text-underline-offset:4px}.badge{display:inline-block;padding:5px 12px;border:1px solid #32634f;background:#143b2c;border-radius:99px;color:var(--green);font-size:13px;font-weight:700}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:28px 0}.card,.section{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}.card span{color:var(--muted);font-size:14px}.card strong{display:block;font-size:clamp(24px,3vw,35px);color:var(--cyan);margin-top:6px}.section{margin:20px 0}.actions{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0}.button{display:inline-block;border:1px solid #31607d;border-radius:10px;padding:10px 16px;text-decoration:none;background:#153b53;font-weight:650}.button.secondary{background:#17273c;border-color:var(--line)}video{width:100%;max-height:640px;border-radius:12px;background:#080d16}img{display:block;width:100%;border-radius:10px;background:white}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:570px}th,td{padding:13px 14px;text-align:left;border-bottom:1px solid var(--line)}th{font-size:13px;color:var(--muted);font-weight:600}td:first-child{font-weight:650}.note{border-left:3px solid #e3bb64;padding:8px 16px;background:#302a1c;border-radius:0 9px 9px 0;color:#edd9af}.files{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.file{padding:15px 18px;border:1px solid var(--line);border-radius:12px;text-decoration:none;background:#0e1929}.file small{display:block;color:var(--muted);margin-top:3px}code{font-size:13px;overflow-wrap:anywhere;color:#c3d6ee}footer{color:var(--muted);font-size:13px;margin-top:32px}.subtle{font-size:14px}details{margin-top:18px}summary{cursor:pointer;color:var(--muted)}@media(max-width:800px){.cards{grid-template-columns:repeat(2,1fr)}.files{grid-template-columns:1fr}.section{padding:18px}main{padding:26px 14px}}
@@ -13,144 +13,123 @@
 </head>
 <body><main>
 <header>
-<span class="badge">✓ Лучшая модель: best config · seed 50</span>
+<span class="badge">Selected SAC model · seed 50</span>
 <h1>SAC × Ant-v5</h1>
-<p>Настоящий эксперимент Gymnasium / MuJoCo / Stable-Baselines3. После исследовательской кампании выбрана конфигурация lr=1e-3, batch=128. Сравнения ограничены малым числом независимых обучений.</p>
-<div class="actions"><a class="button" href="sac_ant_v5_submission.zip" download>Материалы для сдачи · ZIP</a><a class="button secondary" href="PRESENTATION_DRAFT.md" download>Черновик презентации</a><a class="button secondary" href="sac_ant_v5_bundle.zip" download>Исследовательский архив</a><a class="button secondary" href="#best">Лучшая модель</a><a class="button secondary" href="#followup">Новое сравнение</a><a class="button secondary" href="#hardening">Надёжность · сиды/абляции</a><a class="button secondary" href="#video">Смотреть видео</a><a class="button secondary" href="#graphs">Графики</a><a class="button secondary" href="http://100.64.62.13:6007/" target="_blank" rel="noopener">Открыть TensorBoard ↗</a></div>
+<p>This experiment uses Gymnasium, MuJoCo, and Stable-Baselines3. The exploratory campaign selected a learning rate of 1e-3 and a batch size of 128. The comparisons are based on a small number of independent training runs.</p>
+<div class="actions"><a class="button" href="../../REPORT.md">Project report</a><a class="button secondary" href="#best">Selected SAC configuration</a><a class="button secondary" href="#followup">Follow-up comparison</a><a class="button secondary" href="#hardening">Seeds and ablations</a><a class="button secondary" href="#video">Watch video</a><a class="button secondary" href="#graphs">Follow-up plot</a><a class="button secondary" href="#downloads">Evaluation data</a></div>
 </header>
 <div class="cards">
-<div class="card"><span>Hero: награда (best config)</span><strong>5 818 ± 148</strong></div>
-<div class="card"><span>Среднее по 3 сидам</span><strong>5 401</strong></div>
-<div class="card"><span>Падения (hero)</span><strong>0 / 30</strong></div>
-<div class="card"><span>Шагов обучения</span><strong>1 000 000</strong></div>
+<div class="card"><span>Selected model return</span><strong>5 818 ± 148</strong></div>
+<div class="card"><span>Mean across three seeds</span><strong>5 401</strong></div>
+<div class="card"><span>Selected model falls</span><strong>0 / 30</strong></div>
+<div class="card"><span>Training steps</span><strong>1 000 000</strong></div>
 </div>
 <section class="section">
-<h2>Насколько хорошо получилось?</h2>
+<h2>Base SAC evaluation</h2>
 <div class="table-wrap"><table>
-<thead><tr><th>Проверка</th><th>Средняя награда</th><th>Прогресс по x</th><th>Падения</th></tr></thead>
+<thead><tr><th>Evaluation</th><th>Mean return</th><th>Forward progress</th><th>Falls</th></tr></thead>
 <tbody>
-<tr><td>Случайная политика · 10 эпизодов</td><td>−62</td><td>0,16 м</td><td>—</td></tr>
-<tr><td>SAC до обучения · 10 эпизодов</td><td>962</td><td>—</td><td>—</td></tr>
-<tr><td>SAC после обучения · 10 эпизодов</td><td>5 701 ± 157</td><td>286,39 м</td><td>0 / 10</td></tr>
-<tr><td>30 новых начальных состояний</td><td>5 303 ± 1 157</td><td>266,57 м</td><td>3 / 30</td></tr>
+<tr><td>Random policy · 10 episodes</td><td>−62 ± 112</td><td>0.16 m</td><td>9 / 10</td></tr>
+<tr><td>SAC before training · 10 episodes</td><td>962 ± 6</td><td>−0.89 m</td><td>0 / 10</td></tr>
+<tr><td>SAC after training · 10 episodes</td><td>5 701 ± 157</td><td>286.39 m</td><td>0 / 10</td></tr>
+<tr><td>30 fresh initial states</td><td>5 303 ± 1 157</td><td>266.57 m</td><td>3 / 30</td></tr>
 </tbody></table></div>
-<p class="subtle">± — выборочное стандартное отклонение награды между эпизодами, не доверительный интервал. Максимум эпизода — 1000 шагов; на новых состояниях средняя длина составила 944 шага.</p>
-<p class="note">Походка хорошая, но не идеальная: на дополнительной проверке было 10% падений. Ниже — много-сидовая проверка и абляции, которые ставят эту цифру в честный контекст.</p>
+<p class="subtle">The ± values show the sample standard deviation of episode returns. The fall column counts episodes terminated by the environment. Episodes were capped at 1,000 steps and averaged 944 steps from fresh initial states.</p>
+<p class="note">The additional evaluation observed falls in 10% of episodes. The multi-seed results and ablations below show how performance varied across runs and settings.</p>
 </section>
 <section class="section" id="best">
-<h2>Лучшая модель (best config)</h2>
-<p>По результатам исследовательских абляций выбрана конфигурация <code>lr=1e-3</code>, <code>batch=128</code>, сеть 256; обучены 3 новых сида (50/51/52) по 1М шагов. Результаты трёх отдельных обучений:</p>
+<h2>Selected SAC configuration</h2>
+<p>The exploratory ablations informed a configuration with <code>lr=1e-3</code>, <code>batch=128</code>, and two hidden layers of width 256. Each of the three new seeds (50, 51, and 52) trained for 1 million steps.</p>
 <div class="table-wrap"><table>
-<thead><tr><th>Сид</th><th>Награда</th><th>Ст. откл.</th><th>Прогресс по x</th><th>Падения</th><th>n</th></tr></thead>
+<thead><tr><th>Seed</th><th>Mean return</th><th>Episode SD</th><th>Forward progress</th><th>Falls</th><th>Episodes</th></tr></thead>
 <tbody>
-<tr><td><b>50 (hero)</b></td><td><b>5 818</b></td><td>148</td><td>283 м</td><td>0%</td><td>30</td></tr>
-<tr><td>51</td><td>5 362</td><td>701</td><td>263 м</td><td>3%</td><td>30</td></tr>
-<tr><td>52</td><td>5 023</td><td>1 256</td><td>237 м</td><td>3%</td><td>30</td></tr>
+<tr><td><b>50 (selected)</b></td><td><b>5 818</b></td><td>148</td><td>282.5 m</td><td>0%</td><td>30</td></tr>
+<tr><td>51</td><td>5 362</td><td>701</td><td>263 m</td><td>3%</td><td>30</td></tr>
+<tr><td>52</td><td>5 023</td><td>1 256</td><td>237 m</td><td>3%</td><td>30</td></tr>
 </tbody></table></div>
-<p class="note">Среднее <b>5 401</b>, диапазон <b>5 023–5 818</b>, разброс <b>794</b> — против 3 853 / 2 571–5 701 / 3 130 у исходной конфигурации. Худший сид новой конфигурации (5 023) выше среднего старой (3 853). Наблюдаемые доли падений составили 0–3% против 0–50% при разных протоколах; это не оценка причинного эффекта.</p>
-<img src="hardening/best_vs_base.png" alt="Best config vs base config">
-<img src="hardening/best_config.png" alt="Best config seeds">
-<p class="subtle">На 500k base seed 43 дал 2 324 (checkpoint); seed 42 — 3 411 ± 1 476 (периодическая оценка, n=10). Протоколы различаются; причинного сравнения нет. Hero — <a href="best_config/seed_50/sac_final.zip" download>seed 50</a>.</p>
-<h3>Ограничения статистики</h3>
-<p class="note">Прежние pooled p-value и доверительные интервалы отозваны: эпизоды одной модели не являются независимыми обучениями, а веса сидов были неравными. Прежняя стохастическая оценка также отозвана: её поэпизодные исходные данные не сохранились.</p>
-<p class="subtle">Checkpoint до последнего обновления: 5 279 ± 1 601, 2/10 падений; final после одного обновления: 5 818 ± 148, 0/30. Первые 10 reset seeds совпадают, но веса различаются. На других общих reset seeds 920000–920029: checkpoint 5 854 ± 153, final 5 810 ± 100, оба 0/30 падений; это одна пара моделей, не независимые обучения.</p>
-<p class="subtle"><b>Ограничения:</b> сравниваются разные training seeds (base 42/43/44, best 50/51/52); по три независимых обучения, разные протоколы оценки и выбор конфигурации по абляциям. Только Ant-v5; обобщение не доказано.</p>
+<p class="note">The selected configuration had a mean of <b>5 401</b>, a range of <b>5 023–5 818</b>, and a spread of <b>794</b>. The base configuration had a mean of 3 853, a range of 2 571–5 701, and a spread of 3 130. The lowest return for the selected configuration (5 023) exceeded the base mean (3 853). Observed fall rates were 0–3% for the selected configuration and 0–50% for the base configuration, under different protocols that preclude a causal estimate.</p>
+<h3>Statistical limitations</h3>
+<p class="note">The earlier pooled p-values and confidence intervals were withdrawn because episodes from the same model share a training run and the analysis weighted seeds unequally. The earlier stochastic evaluation was also withdrawn because its per-episode source data were unavailable.</p>
+<p class="subtle">Two snapshots of the seed-50 training run were evaluated at 1 million steps. The checkpoint saved before the last gradient update scored 5 279 ± 1 601 with 2/10 falls. The final model scored 5 818 ± 148 with 0/30 falls. The evaluations shared their first ten reset seeds. On 30 additional shared reset seeds (920000–920029), the checkpoint scored 5 854 ± 153 and the final model scored 5 810 ± 100, with 0/30 observed falls each. The historical release bundle contains the per-episode data for this additional comparison.</p>
+<p class="subtle"><b>Limitations</b> include different training seeds (42/43/44 for the base configuration and 50/51/52 for the selected configuration), three independent runs per configuration, different evaluation protocols, and configuration selection using the ablations. All results come from Ant-v5.</p>
 </section>
 <section class="section" id="followup">
-<h2>Новое сравнение: SAC / TD3 / PPO</h2>
-<p>Зафиксированный до запуска протокол: по три независимых training seed (60–62) на алгоритм, 1 млн шагов, по 30 одинаковых reset seeds для каждого парного seed. TD3 использует Gaussian action noise σ=0,1.</p>
+<h2>Follow-up comparison of SAC, TD3, and PPO</h2>
+<p>The protocol specified three training seeds (60–62) per algorithm and 1 million steps per run. Within each training seed, the algorithms shared the same 30 evaluation resets. The reset sets overlap across training seeds. TD3 used Gaussian action noise with σ=0.1. <a href="../../EXPERIMENT_PROTOCOL.md">Read the experiment protocol</a>.</p>
 <div class="table-wrap"><table>
-<thead><tr><th>Алгоритм</th><th>Seed 60</th><th>Seed 61</th><th>Seed 62</th><th>Среднее трёх</th></tr></thead>
-<tbody><tr><td>SAC</td><td>3 367</td><td>4 243</td><td>4 427</td><td>4 012</td></tr>
-<tr><td>TD3</td><td>3 368</td><td>3 514</td><td>3 044</td><td>3 309</td></tr>
-<tr><td>PPO</td><td>1 088</td><td>948</td><td>809</td><td>948</td></tr></tbody></table></div>
-<img src="hardening/followup.png" alt="Средняя награда каждой модели по трём training seeds">
-<p class="note">Это описательное сравнение конкретных конфигураций. При seed 60 SAC и TD3 почти совпали (разница −1); при seed 61 и 62 SAC выше на 729 и 1 383. Три обучения на алгоритм и одна среда не доказывают общего превосходства; равное число шагов среды не означает равные вычисления.</p>
-<p>Контрольный base SAC seed 42 на 500k: 1 584 ± 1 183, 7/10 падений при том же финальном протоколе, что и у абляций. Это один seed, а не доказательство обобщаемости. Подробные CSV, сводки и протокол включены в ZIP.</p>
+<thead><tr><th>Algorithm</th><th>Seed 60</th><th>Seed 61</th><th>Seed 62</th><th>Mean across seeds</th></tr></thead>
+<tbody><tr><td>SAC</td><td>3 366.9</td><td>4 243.5</td><td>4 426.9</td><td>4 012.4</td></tr>
+<tr><td>TD3</td><td>3 367.8</td><td>3 514.2</td><td>3 044.1</td><td>3 308.7</td></tr>
+<tr><td>PPO</td><td>1 087.8</td><td>948.0</td><td>809.2</td><td>948.3</td></tr></tbody></table></div>
+<img id="graphs" src="../followup/followup.png" alt="Mean return for each algorithm across three training seeds">
+<p class="note">This comparison describes the tested configurations. SAC scored 1 point below TD3 at seed 60, and 729 and 1 383 points above TD3 at seeds 61 and 62. The study used three training runs per algorithm in one environment. The matched budget counts environment steps, and compute can differ between algorithms.</p>
+<p>The separate base SAC control at seed 42 scored 1 584 ± 1 183 with 7/10 falls at 500k steps under the same final evaluation protocol as the ablations. The control used one training seed. <a href="../followup/analysis.md">Read the follow-up analysis</a>.</p>
 </section>
 <section class="section" id="hardening">
-<h2>Проверка надёжности: несколько сидов, сходимость, абляции, бейзлайны</h2>
-<p>Чтобы результат не выглядел случайным, прогнана кампания из 10 экспериментов (12 ядер CPU; GPU не ускоряет задачу — бутлнек в физике MuJoCo). Всё это — операционные оценки на 10–30 эпизодах, а не популяционная статистика.</p>
+<h2>Robustness, convergence, ablations, and baselines</h2>
+<p>We ran ten experiments with three workers and four Torch threads per worker. The tables summarize evaluations of 10–30 episodes per configuration and checkpoint.</p>
 
-<h3>1. Разброс между training-сидами (SAC, 1М шагов)</h3>
+<h3>1. Variation across training seeds (SAC, 1M steps)</h3>
 <div class="table-wrap"><table>
-<thead><tr><th>Сид</th><th>Средняя награда</th><th>Ст. откл.</th><th>Прогресс по x</th><th>Падения</th><th>n</th></tr></thead>
+<thead><tr><th>Seed</th><th>Evaluation</th><th>Mean return</th><th>Episode SD</th><th>Forward progress</th><th>Falls</th><th>Episodes</th></tr></thead>
 <tbody>
-<tr><td>42</td><td>5 701</td><td>157</td><td>286 м</td><td>0%</td><td>10</td></tr>
-<tr><td>43</td><td>3 286</td><td>904</td><td>171 м</td><td>50%</td><td>10</td></tr>
-<tr><td>44</td><td>2 571</td><td>1 108</td><td>133 м</td><td>43%</td><td>30</td></tr>
+<tr><td>42</td><td>Final</td><td>5 701</td><td>157</td><td>286 m</td><td>0%</td><td>10</td></tr>
+<tr><td>43</td><td>1M checkpoint of 2M run</td><td>3 286</td><td>904</td><td>171 m</td><td>50%</td><td>10</td></tr>
+<tr><td>44</td><td>Final</td><td>2 571</td><td>1 108</td><td>133 m</td><td>43%</td><td>30</td></tr>
 </tbody></table></div>
-<p class="note">Среднее по сидам ≈ <b>3 853</b>, диапазон <b>2 571–5 701</b>. Цифра 5 701 — это <b>удачный сид и верх диапазона</b>, а не типичное значение. Честная формулировка: SAC при 1М шагов даёт ≈ 2 500–5 700 в зависимости от сида.</p>
-<img src="hardening/seeds.png" alt="Разброс между сидами">
+<p class="note">The mean across the three reported seed results was about <b>3 853</b>, with an observed range of <b>2 571–5 701</b>. The evaluations used different episode counts and combined checkpoint and final evaluations.</p>
 
-<h3>2. Сходимость по шагам (seed 43, оценка каждые 250k)</h3>
+<h3>2. Checkpoint evaluations every 250k steps (seed 43)</h3>
 <div class="table-wrap"><table>
-<thead><tr><th>Шагов</th><th>250k</th><th>500k</th><th>750k</th><th>1М</th><th>1,25М</th><th>1,5М</th><th>1,75М</th><th>2М</th></tr></thead>
-<tbody><tr><td>Награда</td><td>1 068</td><td>2 324</td><td>3 348</td><td>3 286</td><td>2 011</td><td>2 974</td><td>2 315</td><td>3 394</td></tr></tbody></table></div>
-<p>У seed 43 оценки после 750k колеблются; одна траектория не доказывает общего плато или оптимального бюджета.</p>
-<img src="hardening/convergence.png" alt="Кривая сходимости">
+<thead><tr><th>Steps</th><th>250k</th><th>500k</th><th>750k</th><th>1M</th><th>1.25M</th><th>1.5M</th><th>1.75M</th><th>2M</th></tr></thead>
+<tbody><tr><td>Return</td><td>1 068</td><td>2 324</td><td>3 348</td><td>3 286</td><td>2 011</td><td>2 974</td><td>2 315</td><td>3 394</td></tr></tbody></table></div>
+<p>Evaluation returns for seed 43 fluctuated after 750k steps. A general performance plateau or optimal budget would require evidence from more than one training trajectory.</p>
 
-<h3>3. Абляция гиперпараметров (SAC, seed 42, 500k, по одному фактору)</h3>
+<h3>3. Hyperparameter ablations (SAC, seed 42, 500k steps, one factor at a time)</h3>
 <div class="table-wrap"><table>
-<thead><tr><th>Фактор</th><th>Настройка</th><th>Награда</th><th>Ст. откл.</th><th>Падения</th></tr></thead>
+<thead><tr><th>Factor</th><th>Setting</th><th>Return</th><th>Std. dev.</th><th>Falls</th></tr></thead>
 <tbody>
-<tr><td>Сеть</td><td>64,64</td><td>657</td><td>579</td><td>80%</td></tr>
-<tr><td>Сеть</td><td>128,128</td><td>2 074</td><td>743</td><td>30%</td></tr>
-<tr><td>Сеть</td><td>256,256 (база)</td><td colspan="3">см. 1М-референс</td></tr>
+<tr><td>Network</td><td>64,64</td><td>657</td><td>579</td><td>80%</td></tr>
+<tr><td>Network</td><td>128,128</td><td>2 074</td><td>743</td><td>30%</td></tr>
+<tr><td>Network</td><td>256,256 (base)</td><td colspan="3">See the 1M-step reference</td></tr>
 <tr><td>Learning rate</td><td>1e-4</td><td>1 803</td><td>700</td><td>30%</td></tr>
-<tr><td>Learning rate</td><td>3e-4 (база)</td><td colspan="3">см. 1М-референс</td></tr>
+<tr><td>Learning rate</td><td>3e-4 (base)</td><td colspan="3">See the 1M-step reference</td></tr>
 <tr><td>Learning rate</td><td>1e-3</td><td><b>4 503</b></td><td>1 241</td><td>10%</td></tr>
 <tr><td>Batch size</td><td>128</td><td>2 389</td><td>1 266</td><td>60%</td></tr>
-<tr><td>Batch size</td><td>256 (база)</td><td colspan="3">см. 1М-референс</td></tr>
+<tr><td>Batch size</td><td>256 (base)</td><td colspan="3">See the 1M-step reference</td></tr>
 <tr><td>Batch size</td><td>512</td><td>1 707</td><td>1 124</td><td>70%</td></tr>
 </tbody></table></div>
-<p>Это исследовательские результаты одного seed: в данном протоколе lr=1e-3 превысил 1e-4, а batch 128 — 512. Согласованного финального контроля базовой конфигурации на 500k нет.</p>
-<img src="hardening/ablation.png" alt="Абляция гиперпараметров">
+<p>In this single-seed exploratory protocol, a learning rate of 1e-3 performed better than 1e-4, and a batch size of 128 performed better than 512. The original campaign lacked a matched final evaluation of the base configuration at 500k steps.</p>
 
-<h3>4. Сравнение алгоритмов (1М шагов, seed 42)</h3>
+<h3>4. Algorithm baselines (requested 1M steps, seed 42)</h3>
 <div class="table-wrap"><table>
-<thead><tr><th>Алгоритм</th><th>Награда</th><th>Ст. откл.</th><th>Прогресс по x</th><th>Падения</th></tr></thead>
+<thead><tr><th>Algorithm</th><th>Actual steps</th><th>Mean return</th><th>Episode SD</th><th>Forward progress</th><th>Falls</th></tr></thead>
 <tbody>
-<tr><td><b>SAC</b></td><td><b>5 701</b></td><td>157</td><td>286 м</td><td>0%</td></tr>
-<tr><td>TD3</td><td>3 117</td><td>415</td><td>137 м</td><td>17%</td></tr>
-<tr><td>PPO</td><td>1 199</td><td>332</td><td>35 м</td><td>10%</td></tr>
+<tr><td><b>SAC reference</b></td><td>1 000 000</td><td><b>5 701</b></td><td>157</td><td>286 m</td><td>0 / 10</td></tr>
+<tr><td>TD3</td><td>1 000 000</td><td>3 117</td><td>415</td><td>137 m</td><td>5 / 30</td></tr>
+<tr><td>PPO</td><td>1 001 472</td><td>1 199</td><td>332</td><td>35 m</td><td>3 / 30</td></tr>
 </tbody></table></div>
-<p>Это результаты отдельных конфигураций на одном training seed, а не общее превосходство алгоритма. TD3 запускался без exploration action noise; у PPO и TD3 нет независимых повторов обучения.</p>
-<img src="hardening/baselines.png" alt="Сравнение алгоритмов">
-
-<p class="note"><b>Итог:</b> результаты описывают конкретные запуски; 5 701 — верх наблюдаемого диапазона базовых сидов (среднее ≈ 3 853). Абляции исследовательские и не имеют согласованного базового контроля на 500k.</p>
+<p>The PPO run finished its last 2,048-step rollout and exceeded the requested budget. The SAC reference used 10 evaluation episodes and TD3 and PPO used 30 each. TD3 ran without action exploration noise. Each algorithm used a single training run in this baseline comparison.</p>
 </section>
 <section class="section" id="video">
-<h2>Видео лучшего робота (best config, seed 50)</h2>
-<video controls playsinline preload="metadata"><source src="best_config/seed_50/rollout.mp4" type="video/mp4">Браузер не поддерживает видео. <a href="best_config/seed_50/rollout.mp4">Скачать MP4</a>.</video>
-<p class="subtle">Deterministic rollout из заново загруженного hero-checkpoint, 1000 шагов. <a href="best_config/seed_50/rollout.mp4" download>Скачать видео · ~1,3 МБ</a>. Исходный вариант (seed 42, base config): <a href="seed_42/rollout.mp4">видео</a> · <a href="seed_42/sac_final.zip" download>модель</a>.</p>
-</section>
-<section class="section" id="graphs">
-<h2>Графики обучения и оценки</h2>
-<a href="learning_curves.png" target="_blank" rel="noopener"><img src="learning_curves.png" alt="Награда, длина эпизодов, промежуточные оценки, SAC losses, коэффициент энтропии и сравнение политик"></a>
-<p class="subtle">Нажмите на график, чтобы открыть в полном размере. Для интерактивного просмотра и выбора метрик используйте <a href="http://100.64.62.13:6007/" target="_blank" rel="noopener">TensorBoard</a>.</p>
+<h2>Selected model rollout (seed 50)</h2>
+<video controls playsinline preload="metadata"><source src="../../videos/presentation_demo.mp4" type="video/mp4">Your browser does not support embedded video. <a href="../../videos/presentation_demo.mp4">Download MP4</a>.</video>
+<p class="subtle">The video shows a 1,000-step deterministic rollout of the seed-50 policy on reset seed 100050. <a href="../../videos/presentation_demo.mp4" download>Download video</a> · <a href="../../videos/README.md">Recording notes</a>.</p>
 </section>
 <section class="section" id="downloads">
-<h2>Скачать результаты</h2>
-<p>Готовый ZIP: исходники, ноутбук, финальная модель, графики, CSV, видео и TensorBoard-логи. Внутри — инструкция, версии зависимостей и пример запуска обученной модели без нового обучения. Replay buffer (~1,7 ГБ) скачивается отдельно. <a href="sac_ant_v5_bundle.zip.sha256" download>Контрольная сумма SHA-256</a>.</p>
+<h2>Evaluation data and reports</h2>
 <div class="files">
-<a class="file" href="sac_ant_v5_bundle.zip" download>Весь проект и результаты · ZIP<small>Код + notebook + лучшая модель + графики + видео · без большого replay buffer</small></a>
-<a class="file" href="best_config/seed_50/sac_final.zip" download>⭐ Лучшая модель (best config, seed 50)<small>ZIP · ~4,1 МБ · награда 5 818, 0% падений</small></a>
-<a class="file" href="seed_42/sac_final.zip" download>Исходная модель (base config, seed 42)<small>ZIP · ~4,3 МБ · награда 5 701</small></a>
-<a class="file" href="seed_42/best/best_model.zip" download>Лучший промежуточный checkpoint<small>Выбран по промежуточной оценке, не по итоговому тесту</small></a>
-<a class="file" href="evaluation_all.csv" download>Основная оценка · CSV<small>Random / SAC до / SAC после — 30 строк</small></a>
-<a class="file" href="unseen_reset_validation.csv" download>30 новых начальных состояний · CSV<small>Дополнительная проверка без обновления весов</small></a>
-<a class="file" href="seed_42/train_episodes.csv" download>Обучающие эпизоды · CSV<small>Награда, длина и шаг завершения эпизода</small></a>
-<a class="file" href="seed_42/losses.csv" download>Функции потерь · CSV<small>Actor, critic и температура энтропии</small></a>
-<a class="file" href="summary.json" download>Сводка запуска · JSON<small>Шаги, обновления, проверка загрузки модели и replay</small></a>
-<a class="file" href="unseen_reset_validation.json" download>Дополнительная проверка · JSON<small>Метрики, диапазон наград и список reset-seed</small></a>
-<a class="file" href="config.json" download>Настройки и версии · JSON<small>Бюджет, гиперпараметры и окружение эксперимента</small></a>
-<a class="file" href="learning_curves.png" download>Итоговые графики · PNG<small>Полный размер для отчёта или презентации</small></a>
+<a class="file" href="../campaign/reference/evaluation_all.csv" download>Base SAC evaluation · CSV<small>30 rows for the random policy and SAC before and after training</small></a>
+<a class="file" href="../campaign/reference/unseen_reset_validation.csv" download>30 fresh resets · CSV<small>Additional evaluation with fixed model weights</small></a>
+<a class="file" href="../campaign/reference/summary.json" download>Base SAC run summary · JSON<small>Steps, updates, and reload checks</small></a>
+<a class="file" href="../campaign/reference/unseen_reset_validation.json" download>Fresh reset summary · JSON<small>Metrics, return range, and reset seeds</small></a>
+<a class="file" href="../campaign/derived_summary.json" download>Exploratory campaign index · JSON<small>Run paths, settings, and checkpoint metrics</small></a>
+<a class="file" href="../campaign/best/seed_50/evaluation_all.csv" download>Selected seed-50 evaluation · CSV<small>Random, initial, and final policy results</small></a>
+<a class="file" href="../followup/analysis.md">Follow-up analysis<small>Results by algorithm and training seed</small></a>
+<a class="file" href="../followup/status.json" download>Follow-up run index · JSON<small>Paths to each summary and per-episode CSV</small></a>
 </div>
-<details><summary>Большой файл для продолжения обучения</summary><p><a href="seed_42/replay_buffer.pkl" download>Скачать replay buffer · ~1,7 ГБ</a>. Для просмотра видео или обычного запуска модели он не нужен. Загружайте pickle/checkpoint только из доверенного источника.</p></details>
 </section>
 <footer>
-<p>Каталог на компьютере:<br><code>/home/andreipc/Inno-RL/artifacts/ant_sac_full_20261021T194131399885Z/</code></p>
-<p>Страница доступна только через Tailscale. Здесь опубликованы код проекта в ZIP и результаты этого эксперимента; остальные каталоги компьютера недоступны.</p>
+<p><a href="../../README.md">Project README</a> · <a href="../../REPORT.md">Project report</a> · <a href="../../EXPERIMENT_PROTOCOL.md">Experiment protocol</a></p>
 </footer>
 </main></body></html>

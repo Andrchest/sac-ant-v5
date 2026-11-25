@@ -1,7 +1,8 @@
-# Preregistered follow-up: Ant-v5 algorithm comparison
+# Ant-v5 follow-up protocol
 
-Written before the follow-up training runs. This is a bounded confirmatory-style
-comparison of these specific configurations, not a comprehensive algorithm ranking.
+This protocol defines the settings for the comparison of fixed configurations.
+The launcher recorded the job arguments at campaign start. The protocol file
+first appeared in Git about six minutes after launch. [Recorded job arguments](research/followup/source_status.json)
 
 ## Training arms
 
@@ -21,17 +22,21 @@ comparison of these specific configurations, not a comprehensive algorithm ranki
   descriptively, no pooled episode p-value. Three training seeds cannot justify definitive
   algorithm superiority or reliably quantify rare falls. Evaluation uses seeds distinct
   from training and periodic evaluation.
-- A separate SAC base control: training seed 42, 500,000 steps, evaluation on the same
-  ten final-evaluation reset seeds and configuration as the existing seed-42 500k ablations.
+- A separate SAC base control: training seed 42, 500,000 steps, base SAC
+  hyperparameters, and the same ten final-evaluation reset seeds as the earlier
+  seed-42 ablations.
   This is a single-seed baseline, not a general causal claim.
 
-Settings are specified before inspecting these new results. Existing best-config runs were
-selected through exploratory ablation and are not treated as a newly independent comparison.
+The launcher fixed these settings at the start of the follow-up. The separate
+selected-configuration runs came from exploratory ablations.
 Budget parity is in environment steps, not wall clock or gradient update count. These are
 single fixed hyperparameter configurations, not tuned algorithm optima. Models and replay
 buffers are excluded from Git and compact publication artifacts unless explicitly selected.
 
-Execution: at most three CPU workers, four Torch threads per worker, separate run directories.
-The scheduler records commands, process exit status and logs. Existing artifacts are not
-modified. Run `python followup_campaign.py` from the repository root; it writes a new
-unique `artifacts/followup_*` directory and `xp_*` run directories.
+## Running the follow-up
+
+Run `python followup_campaign.py` from the repository root on Linux with at least
+9 GiB of available memory. The launcher uses up to three CPU workers and four
+Torch threads per worker. It records commands, exit status, and logs under a new
+`artifacts/followup_*` directory and writes each run under `artifacts/xp_*`.
+[Recorded results](research/followup/analysis.md)

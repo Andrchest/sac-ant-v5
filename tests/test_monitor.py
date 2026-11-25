@@ -4,9 +4,9 @@ from pathlib import Path
 import pytest
 from rich.console import Console
 
-from sac_monitor import RunDashboard, atomic_json, estimate_progress, sparkline
+from support.sac_monitor import RunDashboard, atomic_json, estimate_progress, sparkline
+from support.watch_sac import resolve_run
 from train_sac import parse_args
-from watch_sac import resolve_run
 
 
 def test_step_eta_is_step_based_and_zero_safe():

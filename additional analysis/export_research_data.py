@@ -7,7 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / 'artifacts'
 OUT = ROOT / 'research' / 'campaign'
 INDEX = ART / 'campaign' / 'campaign_summary.json'
@@ -57,17 +57,13 @@ def export(index=INDEX, out=OUT, root=ROOT):
 
 
 def export_publication(root=ROOT):
+    """Copy reference evidence for the checked-in English publication documents."""
     run = root / 'artifacts/ant_sac_full_20261021T194131399885Z'
     ref = root / 'research/campaign/reference'
     ref.mkdir(parents=True, exist_ok=True)
     for name in ('summary.json', 'evaluation_all.csv', 'unseen_reset_validation.csv',
                  'unseen_reset_validation.json'):
         (ref / name).write_bytes((run / name).read_bytes())
-    public = root / 'research/publication'
-    public.mkdir(parents=True, exist_ok=True)
-    (public / 'index.html').write_bytes((run / 'index.html').read_bytes())
-    report = root / 'artifacts/night_20261021T224130+0300/report.md'
-    (public / 'report.md').write_bytes(report.read_bytes())
 
 
 if __name__ == '__main__':

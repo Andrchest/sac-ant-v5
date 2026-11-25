@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Execute the preregistered follow-up experiments; see EXPERIMENT_PROTOCOL.md."""
+"""Run the follow-up experiments defined in EXPERIMENT_PROTOCOL.md."""
 import concurrent.futures
 from datetime import datetime, timezone
 import json

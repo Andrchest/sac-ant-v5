@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from sac_monitor import atomic_json
+from .sac_monitor import atomic_json
 
 
 def parse_stop_at(value):

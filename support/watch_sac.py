@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 
 
-def resolve_run(value=None, root=Path(__file__).resolve().parent / 'artifacts'):
+def resolve_run(value=None, root=Path(__file__).resolve().parents[1] / 'artifacts'):
     root = Path(root)
     if value:
         path = Path(value).expanduser().resolve()
@@ -38,7 +38,7 @@ def show_notebook(run=None, *, auto_refresh=False, seconds=2):
     try:
         while True:
             state = read_snapshot(path)
-            from sac_monitor import duration
+            from .sac_monitor import duration
             if auto_refresh:
                 clear_output(wait=True)
             display(Markdown(f"### SAC × Ant-v5 — {state['phase']}\n"
@@ -68,7 +68,7 @@ def main(argv=None):
     from rich.console import Console, Group
     from rich.live import Live
     from rich.text import Text
-    from sac_monitor import render_snapshot
+    from .sac_monitor import render_snapshot
     path = resolve_run(args.run)
     console = Console()
 

@@ -6,11 +6,14 @@ Inference only; each checkpoint is loaded with a one-slot replay buffer.
 import argparse
 import json
 from pathlib import Path
+import sys
 
 import pandas as pd
 import torch
 from stable_baselines3 import SAC
 
+if not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from run_experiment import evaluate_agent
 
 

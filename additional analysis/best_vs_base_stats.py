@@ -12,14 +12,17 @@ CAMPAIGN = ART / 'campaign'
 
 
 def main():
-    meta = json.loads((CAMPAIGN / 'campaign_summary.json').read_text(encoding='utf-8'))
+    index = CAMPAIGN / 'campaign_summary.json'
+    if not index.is_file():
+        index = Path('research/campaign/derived_summary.json')
+    meta = json.loads(index.read_text(encoding='utf-8'))
     by_id = {e['id']: e for e in meta['experiments']}
     run = Path(by_id['conv_s43_2m']['run_dir'])
     s43 = json.loads((run / 'summary.json').read_text(encoding='utf-8'))
     cp = next(c for c in s43['checkpoints'] if c['step'] == 1_000_000)
     base = [meta['reference']['final_return_mean'], cp['return_mean'],
             by_id['seed44_1m']['final_return_mean']]
-    bundled = CAMPAIGN / 'best'
+    bundled = index.parent / 'best'
     best = []
     for seed in (50, 51, 52):
         paths = ([bundled / f'seed_{seed}' / 'summary.json'] if bundled.is_dir() else

@@ -1,10 +1,16 @@
+from importlib import import_module
 import json
 from pathlib import Path
 
 import pytest
 
-from ablation_campaign import write_markdown
-from campaign_analysis import _load_campaign, _validate_complete, REQUIRED_EXPERIMENT_IDS
+from deprecated import ablation_campaign as campaign
+from deprecated.ablation_campaign import write_markdown
+
+campaign_analysis = import_module('additional analysis.campaign_analysis')
+_load_campaign = campaign_analysis._load_campaign
+_validate_complete = campaign_analysis._validate_complete
+REQUIRED_EXPERIMENT_IDS = campaign_analysis.REQUIRED_EXPERIMENT_IDS
 
 
 def test_missing_campaign_index_is_an_error(tmp_path):
@@ -67,7 +73,6 @@ def test_interrupt_waits_for_active_worker_and_serializes_checkpoints(tmp_path, 
     import sys
     import threading
     import types
-    import ablation_campaign as campaign
 
     release = threading.Event()
     handlers = {}
@@ -75,7 +80,7 @@ def test_interrupt_waits_for_active_worker_and_serializes_checkpoints(tmp_path, 
                   'steps': 100, 'net': '256,256', 'lr': .0003, 'batch': 256,
                   'eval_episodes': 1}
     monkeypatch.setattr(campaign, 'EXPERIMENTS', [experiment])
-    monkeypatch.setattr(sys, 'argv', ['ablation_campaign.py', '--workers', '1', '--threads', '1',
+    monkeypatch.setattr(sys, 'argv', ['deprecated.ablation_campaign', '--workers', '1', '--threads', '1',
                                     '--deadline', '2099-01-01T00:00:00+00:00',
                                     '--output', str(tmp_path)])
     monkeypatch.setattr(campaign.signal, 'signal', lambda sig, fn: handlers.update({sig: fn}))
@@ -106,7 +111,7 @@ def test_real_sigint_terminates_active_process_after_grace(tmp_path):
     import time
 
     code = '''import sys
-import ablation_campaign as c
+from deprecated import ablation_campaign as c
 c.EXPERIMENTS = [{'id':'probe','priority':1,'algo':'sac','seed':1,'steps':100,
                   'net':'256,256','lr':0.0003,'batch':256,'eval_episodes':1}]
 orig = c.run_process

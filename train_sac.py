@@ -31,7 +31,7 @@ def parse_args(argv=None):
     parser.add_argument('--no-live', action='store_true',
                         help='plain logs instead of animated terminal panel; disk charts still update')
     parser.add_argument('--no-tensorboard', action='store_true')
-    from training_control import parse_stop_at
+    from support.training_control import parse_stop_at
     parser.add_argument('--stop-at', type=parse_stop_at, help='training cutoff ISO timestamp with timezone')
     parser.add_argument('--resume', type=Path, help='full-mode sac_final.zip with sibling replay_buffer.pkl')
     parser.add_argument('--checkpoint-every', type=positive_int, default=100000)
@@ -52,7 +52,7 @@ def save_emergency(namespace):
     model, seed_dir = namespace.get('model'), namespace.get('seed_dir')
     if model is not None and seed_dir is not None:
         try:
-            from training_control import TrainingControl
+            from support.training_control import TrainingControl
             path = TrainingControl(seed_dir).save_checkpoint(model)
             print(f'Emergency checkpoint + replay saved: {path}', flush=True)
         except Exception as error:
@@ -66,7 +66,7 @@ def main(argv=None):
     os.environ['ANT_SAC_SEEDS'] = json.dumps(args.seeds)
     os.environ['ANT_SAC_EPISODES'] = str(args.episodes)
     os.environ['ANT_SAC_OUTPUT'] = str(args.output.resolve())
-    from training_control import TrainingControl, validate_resume
+    from support.training_control import TrainingControl, validate_resume
     if args.resume is not None:
         args.resume = validate_resume(args.resume, args.mode, args.seeds)
         os.environ['ANT_SAC_RESUME'] = str(args.resume)
@@ -100,10 +100,10 @@ def main(argv=None):
             # Only the repository's trusted notebook is executed. No downloaded code.
             exec(compile(source, f'{notebook_path}:cell-{index}', 'exec'), namespace)
             if cell['id'] == 'config':
-                from sac_monitor import RunDashboard
+                from support.sac_monitor import RunDashboard
                 cfg = namespace['CFG']
                 if args.manifest:
-                    from sac_monitor import atomic_json
+                    from support.sac_monitor import atomic_json
                     args.manifest.parent.mkdir(parents=True, exist_ok=True)
                     atomic_json(args.manifest, {'run_dir': str(namespace['RUN_DIR'].resolve())})
                 dashboard = RunDashboard(namespace['RUN_DIR'], args.mode,

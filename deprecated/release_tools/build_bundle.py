@@ -6,14 +6,20 @@ from importlib.metadata import version
 import json
 import os
 import subprocess
+import sys
+from tempfile import TemporaryDirectory
 import zipfile
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--submission', action='store_true', help='write the Moodle submission draft archive')
+parser.add_argument('--submission', action='store_true', help='write the Moodle submission archive')
 parser.add_argument('--compact', action='store_true',
-                    help='omit superseded media, TensorBoard events and duplicate loss logs')
+                    help='omit intermediate plots, TensorBoard events and duplicate loss logs')
 args = parser.parse_args()
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
+if not __package__:
+    sys.path.insert(0, str(ROOT))
+from deprecated.ablation_campaign import write_markdown
+
 RUN = Path(json.loads((ROOT / 'artifacts/latest_run.json').read_text())['run_dir'])
 assert RUN.name == 'ant_sac_full_20261021T194131399885Z'
 PREFIX = 'sac-ant-v5/'
@@ -28,16 +34,25 @@ def include(path, relative):
     files[relative] = path.read_bytes()
 
 
-for name in ['.gitignore', 'README.md', 'requirements-monitor.txt', 'sac_ant_v5.ipynb',
-             'sac_monitor.py', 'train_sac.py', 'watch_sac.py', 'training_control.py',
-             'overnight_sac.py', 'tests/test_monitor.py', 'tests/test_overnight.py',
+for name in ['.gitignore', 'README.md', 'REPORT.md', 'requirements-monitor.txt', 'sac_ant_v5.ipynb',
+             'train_sac.py', 'support/__init__.py', 'support/sac_monitor.py',
+             'support/training_control.py', 'support/watch_sac.py',
+             'tests/test_monitor.py', 'tests/test_overnight.py',
              'tests/test_campaign_regressions.py', 'tests/test_followup_campaign.py',
-             'tests/test_followup_analysis.py', 'EXPERIMENT_PROTOCOL.md', 'followup_campaign.py', 'followup_analysis.py',
-             'run_experiment.py', 'campaign_experiments.py', 'ablation_campaign.py',
-             'campaign_analysis.py', 'campaign_plots.py', 'best_config_plots.py',
-             'best_vs_base_stats.py', 'stochastic_eval.py', 'compare_hero_checkpoints.py', 'make_slide.py',
-             'best_config_campaign.sh', 'make_rollout.py', 'make_presentation_video.py', 'export_research_data.py', 'tests/test_submission.py']:
+             'tests/test_followup_analysis.py', 'EXPERIMENT_PROTOCOL.md', 'followup_campaign.py',
+             'run_experiment.py', 'tests/test_submission.py', 'tests/test_research_export.py']:
     include(ROOT / name, name)
+
+for name in ['__init__.py', 'overnight_sac.py', 'campaign_experiments.py', 'ablation_campaign.py',
+             'best_config_campaign.sh', 'make_rollout.py']:
+    relative = f'deprecated/{name}'
+    include(ROOT / relative, relative)
+
+for name in ['followup_analysis.py', 'campaign_analysis.py', 'campaign_plots.py', 'best_config_plots.py',
+             'best_vs_base_stats.py', 'compare_hero_checkpoints.py', 'stochastic_eval.py',
+             'export_research_data.py']:
+    relative = f'additional analysis/{name}'
+    include(ROOT / relative, relative)
 
 result_names = ['summary.json', 'config.json', 'versions.txt', 'learning_curves.png',
     'evaluation_all.csv', 'paired_returns.csv',
@@ -49,9 +64,9 @@ if not args.compact:
 for name in result_names:
     include(RUN / name, f'artifacts/{RUN.name}/{name}')
 # Hero model = best config (seed 50); base-config model/video stay on the website only.
-hero_names = ['sac_final.zip', 'presentation_demo.mp4', 'train_episodes.csv', 'hero_summary.json']
+hero_names = ['sac_final.zip', 'rollout.mp4', 'train_episodes.csv', 'hero_summary.json']
 if not args.compact:
-    hero_names += ['rollout.mp4', 'losses.csv']
+    hero_names += ['losses.csv']
 for name in hero_names:
     include(RUN / 'best_config/seed_50' / name, f'artifacts/{RUN.name}/best_config/seed_50/{name}')
 include(RUN / 'best_config/seed_50/eval/evaluations.npz', f'artifacts/{RUN.name}/best_config/seed_50/eval/evaluations.npz')
@@ -60,8 +75,6 @@ if not args.compact:
         include(path, f'artifacts/{RUN.name}/{path.relative_to(RUN).as_posix()}')
 hardening_names = ['seeds.png', 'convergence.png', 'ablation.png', 'baselines.png',
                    'best_config.png', 'best_vs_base.png', 'followup.png']
-if not args.compact:
-    hardening_names += ['results_slide.png']
 for name in hardening_names:
     include(RUN / 'hardening' / name, f'artifacts/{RUN.name}/hardening/{name}')
 # Include small primary data, not checkpoints or replay buffers. Rewrite the
@@ -87,13 +100,22 @@ for directory in ('research/followup', 'research/campaign'):
     for path in sorted((ROOT / directory).rglob('*')):
         if path.is_file():
             include(path, path.relative_to(ROOT).as_posix())
-for name in ('analysis.md', 'campaign_report.md'):
-    include(ROOT / 'artifacts/campaign' / name, f'artifacts/campaign/{name}')
-include(ROOT / 'artifacts/campaign/analysis.md', 'HARDENING_ANALYSIS.md')
-include(ROOT / 'submission/PRESENTATION_DRAFT.md', 'PRESENTATION_DRAFT.md')
-include(ROOT / 'submission/README_SUBMISSION.md', 'README_SUBMISSION.md')
-night = Path(json.loads((ROOT / 'artifacts/night_latest.json').read_text())['directory'])
-include(night / 'report.md', 'OVERNIGHT_REPORT.md')
+# Rebuild the reports with the English renderers and recorded data.
+with TemporaryDirectory(prefix='sac-bundle-reports-') as temporary_reports:
+    report_dir = Path(temporary_reports)
+    campaign_report = report_dir / 'campaign_report.md'
+    write_markdown(campaign_report, meta)
+    include(campaign_report, 'artifacts/campaign/campaign_report.md')
+
+    analysis = report_dir / 'analysis.md'
+    analysis_dir = ROOT / 'additional analysis'
+    subprocess.run([sys.executable, '-X', 'utf8', str(analysis_dir / 'campaign_analysis.py'),
+                    '--campaign', 'artifacts/campaign', '--out', str(analysis)],
+                   cwd=ROOT, stdout=subprocess.DEVNULL, check=True)
+    include(analysis, 'artifacts/campaign/analysis.md')
+    include(analysis, 'HARDENING_ANALYSIS.md')
+
+include(ROOT / 'REPORT.md', 'OVERNIGHT_REPORT.md')
 
 packages = ['gymnasium', 'stable-baselines3', 'mujoco', 'torch', 'numpy', 'pandas',
             'matplotlib', 'imageio', 'imageio-ffmpeg', 'pillow', 'rich', 'tensorboard',
@@ -118,7 +140,7 @@ CSV tables and {contents}. Training finished at
 ## View existing results without running training
 
 - Open `artifacts/{RUN.name}/learning_curves.png`.
-- Open `artifacts/{RUN.name}/best_config/seed_50/presentation_demo.mp4` in a video player.
+- Open `artifacts/{RUN.name}/best_config/seed_50/rollout.mp4` in a video player.
 - Read `OVERNIGHT_REPORT.md` for the 10-episode final evaluation, 30 fresh-reset checks,
   and the full hardening campaign (multi-seed, convergence, ablations, baselines).
 - `HARDENING_ANALYSIS.md` and `artifacts/{RUN.name}/hardening/*.png` (seeds, convergence,
@@ -126,10 +148,9 @@ CSV tables and {contents}. Training finished at
 - The notebook's saved outputs are from the initial smoke test, not the full run.
   The complete full-run results are in the artifacts directory above.''' + ('' if not args.compact else '''
 
-This is the compact archive. It omits the superseded `rollout.mp4`, the earlier
-`results_slide.png`, the intermediate `live_curves.png`, the duplicate loss CSVs and
-the TensorBoard event logs. Every reported number, primary evaluation CSV, plot and
-the trained model remain, so all claims in the reports are still checkable.''') + f'''
+The compact archive includes the final evaluation outputs, trained model, rollout
+video and campaign plots. The full archive also includes intermediate `live_curves.png`,
+duplicate loss CSVs and TensorBoard event logs.''') + f'''
 
 ## Install (tested platform: Linux, Python 3.10.19)
 
@@ -155,14 +176,13 @@ available on the results website if you want to compare.
 
 `python train_sac.py` starts a NEW 20-episode smoke experiment. It does not silently
 continue the downloaded full model. Full training requires explicit `--mode full`.
-The separate live viewer expects a running experiment or an explicit run directory.
+Run `python -m support.watch_sac` to view a live experiment or pass an explicit run directory.
 
 ## What is intentionally not included
 
 The ~1.7 GB replay buffer, duplicate best/periodic checkpoints, and local environments
 are omitted to keep this download small. The final model alone is sufficient for inference.
-For exact continuation use the separately downloadable replay buffer beside the original
-checkpoint; do not claim that a fresh empty replay is the original continued experiment.
+Exact continuation requires the original checkpoint and its matching replay buffer.
 
 Checkpoints/pickle files must come from a trusted source. Local paths in config.json are
 recorded provenance from the original machine, not required paths on your computer.
@@ -179,12 +199,14 @@ are not the hero seed 50 result.
 
 ## Hardening campaign (added 2026-11-12) and best-config agent (2026-11-13)
 
-A 10-experiment campaign (seeds 42/43/44 at 1M, a 2M convergence run, six hyperparameter
-ablations at 500k, and PPO/TD3 baselines at 1M) is included. Key honest findings:
-the original 5701 is the top of the observed 2571-5701 range (mean ~3853). These are
-three SAC training seeds with mixed evaluation protocols, not a general performance range.
-PPO and TD3 use one seed; TD3 has no action exploration noise. No algorithm superiority is
-established. Reproduce the analysis with `campaign_analysis.py` and plots with `campaign_plots.py`.
+The ten campaign jobs include a 2M-step SAC seed-43 run, a 1M-step SAC seed-44
+run, six 500k-step ablations, and two baselines. The original SAC seed-42 run is
+the reference. At 1M steps, the three SAC evaluations ranged from 2571 to 5701
+with a mean of about 3853. Seed 43 was evaluated at a checkpoint and episode
+counts varied. TD3 and PPO each used one training seed. TD3 used no action
+exploration noise. PPO completed 1,001,472 steps in 2,048-step rollouts on a
+requested 1M-step budget. Run `python "additional analysis/campaign_analysis.py"`
+for the analysis and `python "additional analysis/campaign_plots.py"` for the plots.
 
 Applying those levers, a best-config agent (SAC 256 / lr 1e-3 / batch 128 / 1M) was trained
 on seeds 50/51/52: mean 5401, range 5023-5818, spread 794, falls 0-3% in these runs.
@@ -199,7 +221,7 @@ models on 30 new reset seeds is included in `artifacts/campaign/hero_checkpoint_
 Zero observed falls does not establish zero fall probability. See `HARDENING_ANALYSIS.md`,
 `OVERNIGHT_REPORT.md` (section 5), and `hardening/best_*.png`.
 
-## Preregistered follow-up (2026-11-19/20)
+## Fixed-protocol follow-up (2026-11-19/20)
 
 On three paired training seeds (60/61/62) at 1M environment steps, mean evaluation
 returns across trained seeds were SAC 4012, TD3 3309 and PPO 948. TD3 used normal
@@ -281,14 +303,11 @@ with zipfile.ZipFile(temporary) as check:
     assert len(check.namelist()) == len(files)
     assert PREFIX + 'sac_ant_v5.ipynb' in check.namelist()
     assert PREFIX + f'artifacts/{RUN.name}/best_config/seed_50/sac_final.zip' in check.namelist()
+    assert PREFIX + f'artifacts/{RUN.name}/best_config/seed_50/rollout.mp4' in check.namelist()
     assert PREFIX + f'artifacts/{RUN.name}/learning_curves.png' in check.namelist()
     for name, digest in manifest['sha256'].items():
         assert hashlib.sha256(check.read(PREFIX + name)).hexdigest() == digest
 os.replace(temporary, archive)
-if args.submission:
-    # Convenient direct download next to the archive on the Tailscale site.
-    (RUN / 'PRESENTATION_DRAFT.md').write_bytes(files['PRESENTATION_DRAFT.md'])
-    (RUN / 'README_SUBMISSION.md').write_bytes(files['README_SUBMISSION.md'])
 digest = hashlib.sha256(archive.read_bytes()).hexdigest()
 checksum = archive.with_suffix('.zip.sha256')
 checksum.write_text(f'{digest}  {archive.name}\n')

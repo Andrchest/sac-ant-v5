@@ -6,12 +6,14 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-CAMPAIGN = Path('artifacts/campaign')
+INDEX = Path('artifacts/campaign/campaign_summary.json')
+if not INDEX.is_file():
+    INDEX = Path('research/campaign/derived_summary.json')
 OUT = Path('artifacts/ant_sac_full_20261021T194131399885Z/hardening')
 OUT.mkdir(parents=True, exist_ok=True)
 
 # --- load campaign summary -------------------------------------------------
-meta = json.loads((CAMPAIGN / 'campaign_summary.json').read_text())
+meta = json.loads(INDEX.read_text(encoding='utf-8'))
 by_id = {e['id']: e for e in meta['experiments']}
 
 def get(xp_id):
@@ -22,7 +24,7 @@ def get(xp_id):
 
 REF = 5701.04  # seed42 1M reference
 
-# --- 1. convergence (seed43) ----------------------------------------------
+# --- 1. Checkpoint returns (seed 43) --------------------------------------
 conv = get('conv_s43_2m')
 if conv and conv.get('checkpoints'):
     cps = sorted(conv['checkpoints'], key=lambda c: c['step'])
@@ -30,14 +32,14 @@ if conv and conv.get('checkpoints'):
     ys = [c['return_mean'] for c in cps]
     fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.plot(xs, ys, 'o-', color='#2563eb', lw=2)
-    ax.axvline(1.0, color='#dc2626', ls='--', lw=1.5, label='1M budget')
-    ax.axhline(REF, color='#16a34a', ls=':', lw=1.5, label='best seed (42) @1M')
+    ax.axvline(1.0, color='#dc2626', ls='--', lw=1.5, label='1M-step checkpoint')
+    ax.axhline(REF, color='#16a34a', ls=':', lw=1.5, label='Seed 42 final policy at 1M')
     for x, y in zip(xs, ys):
         ax.annotate(f'{y:.0f}', (x, y), textcoords='offset points', xytext=(0, 8),
                     ha='center', fontsize=8)
     ax.set_xlabel('Training steps (M)')
     ax.set_ylabel('Eval return (10 eps)')
-    ax.set_title('SAC convergence on Ant-v5 (seed 43)')
+    ax.set_title('SAC checkpoint returns on Ant-v5 (seed 43)')
     ax.legend()
     ax.grid(alpha=0.3)
     fig.tight_layout()
@@ -69,22 +71,24 @@ fig.tight_layout()
 fig.savefig(OUT / 'ablation.png', dpi=130)
 plt.close(fig)
 
-# --- 3. baselines (1M) -----------------------------------------------------
-baselines = [('SAC (seed42)', REF, 157.17)]
+# --- 3. Single-seed baselines ----------------------------------------------
+baselines = [('SAC', 1_000_000, 10, REF, 157.17)]
 ppo = get('ppo_1m')
 td3 = get('td3_1m')
 if ppo and ppo.get('final_return_mean') is not None:
-    baselines.append(('PPO', ppo['final_return_mean'], ppo['final_return_std']))
+    baselines.append(('PPO', ppo['steps'], ppo['eval_episodes'],
+                      ppo['final_return_mean'], ppo['final_return_std']))
 if td3 and td3.get('final_return_mean') is not None:
-    baselines.append(('TD3', td3['final_return_mean'], td3['final_return_std']))
+    baselines.append(('TD3', td3['steps'], td3['eval_episodes'],
+                      td3['final_return_mean'], td3['final_return_std']))
 fig, ax = plt.subplots(figsize=(6.5, 4.5))
-names = [b[0] for b in baselines]
-bv = [b[1] for b in baselines]
-be = [b[2] for b in baselines]
+names = [f'{algo}\n{steps:,} steps\n{episodes} episodes' for algo, steps, episodes, _, _ in baselines]
+bv = [b[3] for b in baselines]
+be = [b[4] for b in baselines]
 bc = ['#16a34a' if 'SAC' in n else '#f59e0b' for n in names]
 bars = ax.bar(names, bv, yerr=be, capsize=5, color=bc, alpha=0.85)
-ax.set_ylabel('Eval return (1M steps, seed 42)')
-ax.set_title('Algorithm comparison on Ant-v5 (1M steps)')
+ax.set_ylabel('Mean return (± episode SD)')
+ax.set_title('Ant-v5 single-seed baselines (seed 42)')
 ax.grid(axis='y', alpha=0.3)
 for b, v in zip(bars, bv):
     ax.annotate(f'{v:.0f}', (b.get_x() + b.get_width() / 2, v),
@@ -100,18 +104,20 @@ if conv and conv.get('checkpoints'):
         if c['step'] == 1_000_000:
             seed43 = c
 seed44 = get('seed44_1m')
-seeds = [('seed 42', 5701.04, 157.17)]
+seeds = [('Seed 42\nFinal policy\n10 episodes', REF, 157.17)]
 if seed43:
-    seeds.append(('seed 43', seed43['return_mean'], seed43['return_std']))
+    seeds.append((f"Seed 43\nCheckpoint\n{seed43.get('n', 10)} episodes",
+                  seed43['return_mean'], seed43['return_std']))
 if seed44:
-    seeds.append(('seed 44', seed44['final_return_mean'], seed44['final_return_std']))
+    seeds.append((f"Seed 44\nFinal policy\n{seed44['eval_episodes']} episodes",
+                  seed44['final_return_mean'], seed44['final_return_std']))
 fig, ax = plt.subplots(figsize=(6.5, 4.5))
 sn = [s[0] for s in seeds]
 sv = [s[1] for s in seeds]
 se = [s[2] for s in seeds]
 bars = ax.bar(sn, sv, yerr=se, capsize=5, color='#2563eb', alpha=0.85)
-ax.set_ylabel('Eval return (1M steps, base hyperparams)')
-ax.set_title('SAC inter-seed variance (Ant-v5, 1M steps)')
+ax.set_ylabel('Mean return (± episode SD)')
+ax.set_title('Base SAC evaluations at 1M steps (Ant-v5)')
 ax.grid(axis='y', alpha=0.3)
 for b, v in zip(bars, sv):
     ax.annotate(f'{v:.0f}', (b.get_x() + b.get_width() / 2, v),
